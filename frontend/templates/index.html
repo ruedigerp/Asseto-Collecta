@@ -1,0 +1,355 @@
+{{template "base" .}}
+{{define "index-content"}}
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Debug Info -->
+        <!-- <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 class="text-sm font-medium text-blue-800">🔧 Debug Info:</h3>
+            <p class="text-xs text-blue-600">API URL: {{.APIBaseURL}}</p>
+            <p class="text-xs text-blue-600">Assets: {{len .Assets}} | Employees: {{len .Employees}}</p>
+            <p class="text-xs text-blue-600">Template: {{.Title}}</p>
+            <p class="text-xs text-blue-600">Zeit: {{.Assets}}</p>
+        </div> -->
+
+        <!-- Main Content -->
+        <div class="space-y-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Asseto Collecta - Asset Management Dashboard</h2>
+                <p class="text-gray-600">Willkommen zum Asset Management System</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-laptop text-2xl text-blue-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Gesamt Assets</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{len .Assets}}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-2xl text-green-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Verfügbar</p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {{$available := 0}}
+                                {{range .Assets}}{{if eq .Status "available"}}{{$available = add $available 1}}{{end}}{{end}}
+                                {{$available}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-check text-2xl text-blue-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Zugewiesen</p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {{$assigned := 0}}
+                                {{range .Assets}}{{if eq .Status "assigned"}}{{$assigned = add $assigned 1}}{{end}}{{end}}
+                                {{$assigned}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-2xl text-purple-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Mitarbeiter</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{len .Employees}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-medium text-gray-900">Neueste Assets</h3>
+                    </div>
+                    <div class="p-6">
+                        {{if .Assets}}
+                            <div class="space-y-4">
+                                {{range .Assets}}
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{.Name}}</p>
+                                        <p class="text-sm text-gray-500">{{.DeviceType}} - {{.SerialNumber}}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full {{getStatusClass .Status}}">
+                                            {{getStatusText .Status}}
+                                        </span>
+                                        <p class="text-sm text-gray-500 mt-1">{{formatDate .CreatedAt}}</p>
+                                    </div>
+                                </div>
+                                {{end}}
+                            </div>
+                        {{else}}
+                            <div class="text-center py-8">
+                                <p class="text-gray-500">❌ Keine Assets vorhanden</p>
+                                <p class="text-xs text-gray-400 mt-2">Backend-Verbindung prüfen: {{.APIBaseURL}}</p>
+                            </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-medium text-gray-900">Mitarbeiter</h3>
+                    </div>
+                    <div class="p-6">
+                        {{if .Employees}}
+                            <div class="space-y-4">
+                                {{range .Employees}}
+                                <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                                        <span class="text-sm font-medium text-blue-600">
+                                            {{slice .FirstName 0 1}}{{slice .LastName 0 1}}
+                                        </span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900">{{.FirstName}} {{.LastName}}</p>
+                                        <p class="text-sm text-gray-500">{{.Email}}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-500">{{.Department}}</p>
+                                    </div>
+                                </div>
+                                {{end}}
+                            </div>
+                        {{else}}
+                            <div class="text-center py-8">
+                                <p class="text-gray-500">❌ Keine Mitarbeiter vorhanden</p>
+                                <p class="text-xs text-gray-400 mt-2">Backend-Verbindung prüfen: {{.APIBaseURL}}</p>
+                            </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Schnellaktionen</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <a href="/assets" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-list"></i>
+                        <span>Assets ({{len .Assets}})</span>
+                    </a>
+                    <a href="/employees" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-address-book"></i>
+                        <span>Mitarbeiter ({{len .Employees}})</span>
+                    </a>
+                    <a href="/health" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>System Status</span>
+                    </a>
+                    <button onclick="window.location.reload()" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Neu laden</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const API_BASE = '{{.APIBaseURL}}';
+    
+    // Token-Hilfsfunktionen
+    function getAuthToken() {
+        // 1. Versuche localStorage
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            return 'Bearer ' + token;
+        }
+        
+        // 2. Versuche Cookie
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'auth_token') {
+                return 'Bearer ' + value;
+            }
+        }
+        
+        return null;
+    }
+    
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+    
+    // Erweiterte API-Request-Funktion mit automatischer Token-Einbindung
+    async function apiRequest(endpoint, method = 'GET', data = null) {
+        const token = getAuthToken();
+        
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        
+        // Token hinzufügen wenn vorhanden
+        if (token) {
+            options.headers['Authorization'] = token;
+        }
+        
+        if (data && method !== 'GET') {
+            options.body = JSON.stringify(data);
+        }
+        
+        try {
+            const response = await fetch(API_BASE + endpoint, options);
+            
+            // Bei 401 zur Login-Seite weiterleiten
+            if (response.status === 401) {
+                console.log('🚫 Unauthorized - redirecting to login');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.location.href = '/login?error=' + encodeURIComponent('Sitzung abgelaufen');
+                return;
+            }
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    }
+    
+    // Teste Token-Gültigkeit beim Laden der Seite
+    document.addEventListener('DOMContentLoaded', function() {
+        const token = getAuthToken();
+        
+        if (!token) {
+            console.log('❌ No auth token found');
+            // Bereits in protected Route - sollte nicht passieren
+            return;
+        }
+        
+        console.log('🔍 Checking token validity...');
+        
+        // Test API call zur Validierung
+        fetch(API_BASE + '/user/profile', {
+            headers: {
+                'Authorization': token
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('✅ Token is valid');
+                return response.json();
+            } else if (response.status === 401) {
+                console.log('❌ Token expired, redirecting to login');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.location.href = '/login?error=' + encodeURIComponent('Sitzung abgelaufen');
+            } else {
+                console.log('⚠️ Token validation failed:', response.status);
+            }
+        })
+        .then(userData => {
+            if (userData) {
+                console.log('👤 Logged in user:', userData.first_name, userData.last_name);
+                localStorage.setItem('user_data', JSON.stringify(userData));
+            }
+        })
+        .catch(error => {
+            console.error('❌ Token validation error:', error);
+        });
+    });
+    
+    // Logout-Funktion
+    function logout() {
+        console.log('👋 Logging out...');
+        
+        // Clear storage
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        // Optional: Backend logout call
+        fetch(API_BASE + '/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': getAuthToken()
+            }
+        }).catch(console.error);
+        
+        // Redirect to login
+        window.location.href = '/login?message=' + encodeURIComponent('Sie wurden erfolgreich abgemeldet');
+    }
+
+        // Check user permissions
+    document.addEventListener('DOMContentLoaded', function() {
+        checkUserPermissions();
+    });
+    async function checkUserPermissions() {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await fetch(`${API_BASE}/user/profile`, {
+                headers: { 'Authorization': token }
+            });
+
+            if (response.ok) {
+                const currentUser = await response.json();
+                
+                if (currentUser.is_admin) {
+                    // Show admin features
+                    document.getElementById('admin-link').style.display = 'block';
+                    // document.getElementById('create-employee-btn').style.display = 'inline-flex';
+                    
+                    // Show admin-only buttons
+                    document.querySelectorAll('.admin-only').forEach(btn => {
+                        btn.style.display = 'inline-block';
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error checking permissions:', error);
+        }
+    }
+ 
+    // Token-Hilfsfunktionen
+    function getAuthToken() {
+        // 1. Versuche localStorage
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            return 'Bearer ' + token;
+        }
+        
+        // 2. Versuche Cookie
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'auth_token') {
+                return 'Bearer ' + value;
+            }
+        }
+        
+        return null;
+    }
+</script>
+{{end}}

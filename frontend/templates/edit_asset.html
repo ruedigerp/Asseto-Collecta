@@ -1,0 +1,554 @@
+{{template "base" .}}
+{{define "asset-edit-content"}}
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex items-center space-x-4">
+                <a href="/assets" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </a>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Asset bearbeiten</h2>
+                    <p class="text-gray-600">{{.Asset.DeviceType}} - {{.Asset.SerialNumber}} (ID: {{.Asset.ID}})</p>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <script>
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                
+                if (error) {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+                        errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>${error}`;
+                        document.getElementById('messages').appendChild(errorDiv);
+                    });
+                }
+            </script>
+            <div id="messages"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Edit Form -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-medium text-gray-900">Asset Informationen</h3>
+                        <p class="text-sm text-gray-500">Alle Felder mit * sind Pflichtfelder</p>
+                    </div>
+                    <form method="POST" action="/assets/{{.Asset.ID}}/edit" class="p-6 space-y-6">
+                        <!-- Asset Name -->
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Asset-Bezeichnung *
+                                <span class="text-xs text-gray-500">(z.B. MacBook Air 13", Lenovo ThinkPad X1)</span>
+                            </label>
+                            <input type="text" name="name" id="name" required
+                                   value="{{.Asset.Name}}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Device Type -->
+                        <div>
+                            <label for="device_type" class="block text-sm font-medium text-gray-700 mb-2">
+                                Kategorie *
+                            </label>
+                            <select name="device_type" id="device_type" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Gerätetyp auswählen</option>
+                                <option value="Laptop" {{if eq .Asset.DeviceType "Laptop"}}selected{{end}}>Laptop</option>
+                                <option value="Desktop" {{if eq .Asset.DeviceType "Desktop"}}selected{{end}}>Desktop PC</option>
+                                <option value="Monitor" {{if eq .Asset.DeviceType "Monitor"}}selected{{end}}>Monitor</option>
+                                <option value="Tablet" {{if eq .Asset.DeviceType "Tablet"}}selected{{end}}>Tablet</option>
+                                <option value="Smartphone" {{if eq .Asset.DeviceType "Smartphone"}}selected{{end}}>Smartphone</option>
+                                <option value="Drucker" {{if eq .Asset.DeviceType "Drucker"}}selected{{end}}>Drucker</option>
+                                <option value="Tastatur" {{if eq .Asset.DeviceType "Tastatur"}}selected{{end}}>Tastatur</option>
+                                <option value="Maus" {{if eq .Asset.DeviceType "Maus"}}selected{{end}}>Maus</option>
+                                <option value="Headset" {{if eq .Asset.DeviceType "Headset"}}selected{{end}}>Headset</option>
+                                <option value="Webcam" {{if eq .Asset.DeviceType "Webcam"}}selected{{end}}>Webcam</option>
+                                <option value="Dockingstation" {{if eq .Asset.DeviceType "Dockingstation"}}selected{{end}}>Dockingstation</option>
+                                <option value="Server" {{if eq .Asset.DeviceType "Server"}}selected{{end}}>Server</option>
+                                <option value="Switch" {{if eq .Asset.DeviceType "Switch"}}selected{{end}}>Switch</option>
+                                <option value="Router" {{if eq .Asset.DeviceType "Router"}}selected{{end}}>Router</option>
+                                <option value="Andere" {{if eq .Asset.DeviceType "Andere"}}selected{{end}}>Andere</option>
+                            </select>
+                        </div>
+
+                        <!-- Serial Number -->
+                        <div>
+                            <label for="serial_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                Seriennummer *
+                            </label>
+                            <input type="text" name="serial_number" id="serial_number" required
+                                   value="{{.Asset.SerialNumber}}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Price -->
+                        <div>
+                            <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+                                Preis (€) *
+                            </label>
+                            <input type="number" name="price" id="price" step="0.01" min="0" required
+                                   value="{{.Asset.Price}}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Purchase Date -->
+                        <div>
+                            <label for="purchase_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                Kaufdatum *
+                            </label>
+                            <input type="date" name="purchase_date" id="purchase_date" required
+                                   value="{{.Asset.PurchaseDate.Format "2006-01-02"}}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                                Status *
+                            </label>
+                            <select name="status" id="status" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="available" {{if eq .Asset.Status "available"}}selected{{end}}>Verfügbar</option>
+                                <option value="assigned" {{if eq .Asset.Status "assigned"}}selected{{end}}>Zugewiesen</option>
+                                <option value="maintenance" {{if eq .Asset.Status "maintenance"}}selected{{end}}>Wartung</option>
+                                <option value="retired" {{if eq .Asset.Status "retired"}}selected{{end}}>Ausgemustert</option>
+                            </select>
+                        </div>
+
+                        <!-- Current User (Vereinfachte Version mit Template-Funktion) -->
+                        <div>
+                            <label for="current_user" class="block text-sm font-medium text-gray-700 mb-2">
+                                Zugewiesen an
+                            </label>
+                            <select name="current_user" id="current_user" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Nicht zugewiesen</option>
+                                {{range .Employees}}
+                                <option value="{{.ID}}" {{if isCurrentUser $.Asset.CurrentUser .ID}}selected{{end}}>
+                                    {{.FirstName}} {{.LastName}} ({{.Email}})
+                                </option>
+                                {{end}}
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Änderungen der Zuweisung werden automatisch in der History erfasst
+                            </p>
+                        </div>
+
+                        <!-- Asset Info -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Asset-Informationen</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                                <div>
+                                    <span class="font-medium">Erstellt am:</span>
+                                    {{formatDateTime .Asset.CreatedAt}}
+                                </div>
+                                <div>
+                                    <span class="font-medium">Zuletzt geändert:</span>
+                                    {{formatDateTime .Asset.UpdatedAt}}
+                                </div>
+                                <div>
+                                    <span class="font-medium">Asset-Alter:</span>
+                                    {{timeSince .Asset.PurchaseDate}}
+                                </div>
+                                <div>
+                                    <span class="font-medium">Asset-ID:</span>
+                                    {{.Asset.ID}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="flex items-center justify-between pt-6 border-t">
+                            <div class="text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Änderungen werden sofort gespeichert
+                            </div>
+                            <div class="space-x-3">
+                                <a href="/assets" 
+                                   class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                                    Abbrechen
+                                </a>
+                                <button type="submit" 
+                                        class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-save mr-2"></i>Änderungen speichern
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Actions and Management -->
+                <div class="space-y-6">
+                    <!-- Quick Actions -->
+                    <div class="bg-white rounded-lg shadow-sm border">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-medium text-gray-900">Schnellaktionen</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <a href="/assets/{{.Asset.ID}}/history" 
+                               class="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2">
+                                <i class="fas fa-history"></i>
+                                <span>Asset History anzeigen</span>
+                            </a>
+                            <a href="/assets/{{.Asset.ID}}/manage" 
+                               class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                                <i class="fas fa-cogs"></i>
+                                <span>Asset verwalten</span>
+                            </a>
+                            <button onclick="confirmDelete()" 
+                                    class="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2">
+                                <i class="fas fa-trash"></i>
+                                <span>Asset löschen</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Current Assignment -->
+                    <div class="bg-white rounded-lg shadow-sm border">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-medium text-gray-900">Aktuelle Zuweisung</h3>
+                        </div>
+                        <div class="p-6">
+                            {{if hasCurrentUser .Asset.CurrentUser}}
+                                <div class="flex items-center space-x-3">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span class="text-sm font-medium text-blue-600">
+                                            {{$employeeName := getEmployeeName .Employees .Asset.CurrentUser}}
+                                            {{if ge (len $employeeName) 2}}
+                                                {{slice $employeeName 0 2}}
+                                            {{else}}
+                                                {{$employeeName}}
+                                            {{end}}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{getEmployeeName .Employees .Asset.CurrentUser}}</p>
+                                        <p class="text-sm text-gray-500">Zugewiesen</p>
+                                    </div>
+                                </div>
+                            {{else}}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-user-slash text-4xl text-gray-300 mb-2"></i>
+                                    <p class="text-gray-500">Nicht zugewiesen</p>
+                                </div>
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-3"></i>
+                <h3 class="text-lg font-medium text-gray-900">Asset löschen</h3>
+            </div>
+            <p class="text-gray-600 mb-6">
+                Sind Sie sicher, dass Sie das Asset <strong>{{.Asset.DeviceType}} ({{.Asset.SerialNumber}})</strong> löschen möchten? 
+                Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+            <div class="flex space-x-3">
+                <button onclick="hideDeleteModal()" 
+                        class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                    Abbrechen
+                </button>
+                <form method="POST" action="/assets/{{.Asset.ID}}/delete" class="flex-1">
+                    <button type="submit" 
+                            class="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                        Löschen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+        
+        // ===== UNIVERSAL AUTH FUNCTIONS =====
+        
+        function getAuthToken() {
+            // 1. Versuche localStorage
+            let token = localStorage.getItem('auth_token');
+            if (token && !token.startsWith('Bearer ')) {
+                token = 'Bearer ' + token;
+            }
+            if (token) {
+                console.log('🔑 Token from localStorage:', token.substring(0, 20) + '...');
+                return token;
+            }
+            
+            // 2. Versuche Cookie
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'auth_token' && value) {
+                    const cookieToken = 'Bearer ' + value;
+                    console.log('🍪 Token from cookie:', cookieToken.substring(0, 20) + '...');
+                    return cookieToken;
+                }
+            }
+            
+            console.log('❌ No auth token found in localStorage or cookies');
+            return null;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+
+        function redirectToLogin(message = 'Sitzung abgelaufen') {
+            clearAuth();
+            window.location.href = '/login?error=' + encodeURIComponent(message);
+        }
+
+        // Universelle API-Request Funktion mit automatischer Auth
+        async function apiRequest(endpoint, method = 'POST', data = null) {
+            console.log(`📡 API Request: ${method} ${API_BASE}${endpoint}`);
+            
+            try {
+                const token = getAuthToken();
+                
+                if (!token) {
+                    console.error('❌ No auth token available');
+                    redirectToLogin('Authentifizierung erforderlich');
+                    return;
+                }
+                
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                    console.log('📤 Request data:', data);
+                }
+                
+                const response = await fetch(API_BASE + endpoint, options);
+                console.log(`📨 Response status: ${response.status}`);
+                
+                // Bei 401 zur Login-Seite weiterleiten
+                if (response.status === 401) {
+                    console.log('🚫 Unauthorized - redirecting to login');
+                    redirectToLogin('Sitzung abgelaufen');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch {
+                        errorData = { error: errorText || `HTTP ${response.status}` };
+                    }
+                    
+                    console.error('❌ API Error Response:', errorData);
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ API Success:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ API Request failed:', error);
+                throw error;
+            }
+        }
+
+        // Helper function für einfache GET-Requests
+        async function apiGet(endpoint) {
+            return apiRequest(endpoint, 'GET');
+        }
+
+        // Helper function für POST-Requests
+        async function apiPost(endpoint, data) {
+            return apiRequest(endpoint, 'POST', data);
+        }
+
+        // Helper function für PUT-Requests
+        async function apiPut(endpoint, data) {
+            return apiRequest(endpoint, 'PUT', data);
+        }
+
+        // Helper function für DELETE-Requests
+        async function apiDelete(endpoint) {
+            return apiRequest(endpoint, 'DELETE');
+        }
+
+        // Token-Validierung beim Laden der Seite
+        function validateAuth() {
+            const token = getAuthToken();
+            
+            if (!token) {
+                console.log('❌ No auth token found on page load');
+                redirectToLogin('Authentifizierung erforderlich');
+                return false;
+            }
+            
+            // Optional: Token-Validierung durch API-Call
+            fetch(API_BASE + '/user/profile', {
+                headers: {
+                    'Authorization': token
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Token is valid');
+                    return response.json();
+                } else if (response.status === 401) {
+                    console.log('❌ Token expired');
+                    redirectToLogin('Sitzung abgelaufen');
+                } else {
+                    console.log('⚠️ Token validation failed:', response.status);
+                }
+            })
+            .then(userData => {
+                if (userData) {
+                    console.log('👤 Current user:', userData.first_name, userData.last_name);
+                    localStorage.setItem('user_data', JSON.stringify(userData));
+                }
+            })
+            .catch(error => {
+                console.error('❌ Token validation error:', error);
+            });
+            
+            return true;
+        }
+
+        // Auto-Initialisierung bei DOM-Load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Validating authentication...');
+            validateAuth();
+        });
+
+        // Logout-Funktion
+        function logout() {
+            console.log('👋 Logging out...');
+            
+            const token = getAuthToken();
+            if (token) {
+                // Optional: Backend logout call
+                fetch(API_BASE + '/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token
+                    }
+                }).catch(console.error);
+            }
+            
+            clearAuth();
+            window.location.href = '/login?message=' + encodeURIComponent('Sie wurden erfolgreich abgemeldet');
+        }
+
+        // Error Message Helper
+        function showMessage(message, type = 'success') {
+            const messagesDiv = document.getElementById('messages');
+            if (!messagesDiv) {
+                console.warn('No messages div found');
+                alert(`${type.toUpperCase()}: ${message}`);
+                return;
+            }
+            
+            const messageDiv = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            
+            messageDiv.className = `${bgColor} px-4 py-3 rounded mb-4 border`;
+            messageDiv.innerHTML = `<i class="fas ${icon} mr-2"></i>${message}`;
+            
+            messagesDiv.appendChild(messageDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Global error handler
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.message && event.reason.message.includes('401')) {
+                console.log('🚫 Global 401 handler triggered');
+                redirectToLogin('Sitzung abgelaufen');
+            }
+        });
+        
+        console.log('🔐 Auth system initialized');
+            // Check user permissions
+    document.addEventListener('DOMContentLoaded', function() {
+        checkUserPermissions();
+    });
+    async function checkUserPermissions() {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await fetch(`${API_BASE}/user/profile`, {
+                headers: { 'Authorization': token }
+            });
+
+            if (response.ok) {
+                const currentUser = await response.json();
+                
+                if (currentUser.is_admin) {
+                    // Show admin features
+                    document.getElementById('admin-link').style.display = 'block';
+                    // document.getElementById('create-employee-btn').style.display = 'inline-flex';
+                    
+                    // Show admin-only buttons
+                    document.querySelectorAll('.admin-only').forEach(btn => {
+                        btn.style.display = 'inline-block';
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error checking permissions:', error);
+        }
+    }
+ 
+    // Token-Hilfsfunktionen
+    function getAuthToken() {
+        // 1. Versuche localStorage
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            return 'Bearer ' + token;
+        }
+        
+        // 2. Versuche Cookie
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'auth_token') {
+                return 'Bearer ' + value;
+            }
+        }
+        
+        return null;
+    }
+    </script>
+{{end}}

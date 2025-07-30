@@ -1,0 +1,430 @@
+{{template "base" .}}
+{{define "asset-create-content"}}
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-6">
+            <!-- Header with Back Button -->
+            <div class="flex items-center space-x-4">
+                <a href="/assets" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </a>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Neues Asset erstellen</h2>
+                    <p class="text-gray-600">Fügen Sie ein neues Asset zum System hinzu</p>
+                </div>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <script>
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                const success = urlParams.get('success');
+                
+                if (error) {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+                        errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>${error}`;
+                        document.getElementById('messages').appendChild(errorDiv);
+                    });
+                }
+                
+                if (success) {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
+                        successDiv.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${success}`;
+                        document.getElementById('messages').appendChild(successDiv);
+                    });
+                }
+            </script>
+            <div id="messages"></div>
+
+            <!-- Create Asset Form -->
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-medium text-gray-900">Asset Informationen</h3>
+                    <p class="text-sm text-gray-500">Alle Felder mit * sind Pflichtfelder</p>
+                </div>
+                <form method="POST" action="/assets/create" class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Asset Name -->
+                        <div class="md:col-span-2">
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Asset-Bezeichnung *
+                                <span class="text-xs text-gray-500">(z.B. MacBook Air 13", Lenovo ThinkPad X1, ASUS 24" Monitor)</span>
+                            </label>
+                            <input type="text" name="name" id="name" required
+                                   placeholder="z.B. MacBook Air 13 Space Grau 256GB"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Device Type -->
+                        <div>
+                            <label for="device_type" class="block text-sm font-medium text-gray-700 mb-2">
+                                Kategorie *
+                            </label>
+                            <select name="device_type" id="device_type" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Kategorie auswählen</option>
+                                <option value="Laptop">Laptop</option>
+                                <option value="Desktop">Desktop PC</option>
+                                <option value="Monitor">Monitor</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Smartphone">Smartphone</option>
+                                <option value="Drucker">Drucker</option>
+                                <option value="Tastatur">Tastatur</option>
+                                <option value="Maus">Maus</option>
+                                <option value="Headset">Headset</option>
+                                <option value="Webcam">Webcam</option>
+                                <option value="Dockingstation">Dockingstation</option>
+                                <option value="Server">Server</option>
+                                <option value="Switch">Switch</option>
+                                <option value="Router">Router</option>
+                                <option value="Andere">Andere</option>
+                            </select>
+                        </div>
+
+                        <!-- Serial Number -->
+                        <div>
+                            <label for="serial_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                Seriennummer *
+                            </label>
+                            <input type="text" name="serial_number" id="serial_number" required
+                                   placeholder="z.B. ABC123456789"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Price -->
+                        <div>
+                            <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+                                Preis (€) *
+                            </label>
+                            <input type="number" name="price" id="price" step="0.01" min="0" required
+                                   placeholder="z.B. 1299.99"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Purchase Date -->
+                        <div>
+                            <label for="purchase_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                Kaufdatum *
+                            </label>
+                            <input type="date" name="purchase_date" id="purchase_date" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                                Status *
+                            </label>
+                            <select name="status" id="status" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="available">Verfügbar</option>
+                                <option value="assigned">Zugewiesen</option>
+                                <option value="maintenance">Wartung</option>
+                                <option value="retired">Ausgemustert</option>
+                            </select>
+                        </div>
+
+                        <!-- Current User -->
+                        <div>
+                            <label for="current_user" class="block text-sm font-medium text-gray-700 mb-2">
+                                Zugewiesen an (optional)
+                            </label>
+                            <select name="current_user" id="current_user" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Nicht zugewiesen</option>
+                                {{range .Employees}}
+                                <option value="{{.ID}}">{{.FirstName}} {{.LastName}} ({{.Email}})</option>
+                                {{end}}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-between pt-6 border-t">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Das Asset wird sofort im System erstellt
+                        </div>
+                        <div class="space-x-3">
+                            <a href="/assets" 
+                               class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                                Abbrechen
+                            </a>
+                            <button type="submit" 
+                                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Asset erstellen
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="bg-gray-50 rounded-lg border p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Live-Vorschau</h3>
+                <div class="bg-white rounded-lg shadow-sm border p-4">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900" id="preview-type">Gerätetyp</h4>
+                            <p class="text-sm text-gray-500" id="preview-serial">Seriennummer</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800" id="preview-status">
+                            Verfügbar
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex justify-between">
+                            <span>Preis:</span>
+                            <span class="font-medium" id="preview-price">0,00 €</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Gekauft:</span>
+                            <span id="preview-date">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Zugewiesen an:</span>
+                            <span id="preview-user">Nicht zugewiesen</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+        console.log('➕ Create Asset page loaded');
+        console.log('📍 API Base URL:', API_BASE);
+        console.log('👥 Employees available:', {{len .Employees}});
+
+        // Live preview functionality
+        function updatePreview() {
+            const name = document.getElementById('name').value || 'Asset-Bezeichnung';
+            const deviceType = document.getElementById('device_type').value || 'Kategorie';
+            const serialNumber = document.getElementById('serial_number').value || 'Seriennummer';
+            const price = document.getElementById('price').value || '0';
+            const purchaseDate = document.getElementById('purchase_date').value || '';
+            const status = document.getElementById('status').value || 'available';
+            const currentUser = document.getElementById('current_user').value;
+
+            document.getElementById('preview-type').textContent = name;
+            document.getElementById('preview-serial').textContent = `${deviceType} - ${serialNumber}`;
+            document.getElementById('preview-price').textContent = parseFloat(price).toFixed(2) + ' €';
+            
+            if (purchaseDate) {
+                const date = new Date(purchaseDate);
+                document.getElementById('preview-date').textContent = date.toLocaleDateString('de-DE');
+            } else {
+                document.getElementById('preview-date').textContent = '-';
+            }
+
+            const statusElement = document.getElementById('preview-status');
+            const statusTexts = {
+                'available': { text: 'Verfügbar', class: 'bg-green-100 text-green-800' },
+                'assigned': { text: 'Zugewiesen', class: 'bg-blue-100 text-blue-800' },
+                'maintenance': { text: 'Wartung', class: 'bg-yellow-100 text-yellow-800' },
+                'retired': { text: 'Ausgemustert', class: 'bg-red-100 text-red-800' }
+            };
+            
+            const statusInfo = statusTexts[status] || statusTexts['available'];
+            statusElement.textContent = statusInfo.text;
+            statusElement.className = 'px-2 py-1 text-xs rounded-full ' + statusInfo.class;
+
+            if (currentUser) {
+                const userSelect = document.getElementById('current_user');
+                const selectedOption = userSelect.options[userSelect.selectedIndex];
+                document.getElementById('preview-user').textContent = selectedOption.text;
+            } else {
+                document.getElementById('preview-user').textContent = 'Nicht zugewiesen';
+            }
+        }
+
+        // Add event listeners for live preview
+        document.addEventListener('DOMContentLoaded', function() {
+            const formElements = ['name', 'device_type', 'serial_number', 'price', 'purchase_date', 'status', 'current_user'];
+            formElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updatePreview);
+                    element.addEventListener('change', updatePreview);
+                }
+            });
+
+            // Set default date to today
+            document.getElementById('purchase_date').value = new Date().toISOString().split('T')[0];
+            updatePreview();
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const name = document.getElementById('name').value.trim();
+            const deviceType = document.getElementById('device_type').value;
+            const serialNumber = document.getElementById('serial_number').value;
+            const price = document.getElementById('price').value;
+            const purchaseDate = document.getElementById('purchase_date').value;
+
+            if (!name || !deviceType || !serialNumber || !price || !purchaseDate) {
+                e.preventDefault();
+                alert('Bitte füllen Sie alle Pflichtfelder aus.');
+                return false;
+            }
+
+            if (parseFloat(price) <= 0) {
+                e.preventDefault();
+                alert('Der Preis muss größer als 0 sein.');
+                return false;
+            }
+
+            console.log('📝 Submitting new asset:', {
+                deviceType, serialNumber, price, purchaseDate
+            });
+        });
+    </script>
+    <script>
+    const API_BASE = '{{.APIBaseURL}}';
+    
+    // Token-Hilfsfunktionen
+    function getAuthToken() {
+        // 1. Versuche localStorage
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            return 'Bearer ' + token;
+        }
+        
+        // 2. Versuche Cookie
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'auth_token') {
+                return 'Bearer ' + value;
+            }
+        }
+        
+        return null;
+    }
+    
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+    
+    // Erweiterte API-Request-Funktion mit automatischer Token-Einbindung
+    async function apiRequest(endpoint, method = 'GET', data = null) {
+        const token = getAuthToken();
+        
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        
+        // Token hinzufügen wenn vorhanden
+        if (token) {
+            options.headers['Authorization'] = token;
+        }
+        
+        if (data && method !== 'GET') {
+            options.body = JSON.stringify(data);
+        }
+        
+        try {
+            const response = await fetch(API_BASE + endpoint, options);
+            
+            // Bei 401 zur Login-Seite weiterleiten
+            if (response.status === 401) {
+                console.log('🚫 Unauthorized - redirecting to login');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.location.href = '/login?error=' + encodeURIComponent('Sitzung abgelaufen');
+                return;
+            }
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    }
+    
+    // Teste Token-Gültigkeit beim Laden der Seite
+    document.addEventListener('DOMContentLoaded', function() {
+        const token = getAuthToken();
+        
+        if (!token) {
+            console.log('❌ No auth token found');
+            // Bereits in protected Route - sollte nicht passieren
+            return;
+        }
+        
+        console.log('🔍 Checking token validity...');
+        
+        // Test API call zur Validierung
+        fetch(API_BASE + '/user/profile', {
+            headers: {
+                'Authorization': token
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('✅ Token is valid');
+                return response.json();
+            } else if (response.status === 401) {
+                console.log('❌ Token expired, redirecting to login');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.location.href = '/login?error=' + encodeURIComponent('Sitzung abgelaufen');
+            } else {
+                console.log('⚠️ Token validation failed:', response.status);
+            }
+        })
+        .then(userData => {
+            if (userData) {
+                console.log('👤 Logged in user:', userData.first_name, userData.last_name);
+                localStorage.setItem('user_data', JSON.stringify(userData));
+            }
+        })
+        .catch(error => {
+            console.error('❌ Token validation error:', error);
+        });
+    });
+    
+    // Logout-Funktion
+    function logout() {
+        console.log('👋 Logging out...');
+        
+        // Clear storage
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        // Optional: Backend logout call
+        fetch(API_BASE + '/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': getAuthToken()
+            }
+        }).catch(console.error);
+        
+        // Redirect to login
+        window.location.href = '/login?message=' + encodeURIComponent('Sie wurden erfolgreich abgemeldet');
+    }
+</script>
+{{end}}

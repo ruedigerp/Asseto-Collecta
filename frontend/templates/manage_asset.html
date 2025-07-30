@@ -1,0 +1,553 @@
+{{template "base" .}}
+{{define "asset-manage-content"}}
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex items-center space-x-4">
+                <a href="/assets" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </a>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Asset verwalten</h2>
+                    <p class="text-gray-600">{{.Asset.DeviceType}} - {{.Asset.SerialNumber}}</p>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div id="messages"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Asset Info -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-sm border p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Asset Informationen</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Gerätetyp</label>
+                                <p class="text-sm text-gray-900">{{.Asset.DeviceType}}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Seriennummer</label>
+                                <p class="text-sm text-gray-900">{{.Asset.SerialNumber}}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{getStatusClass .Asset.Status}}">
+                                    {{getStatusText .Asset.Status}}
+                                </span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Preis</label>
+                                <p class="text-sm text-gray-900">{{formatPrice .Asset.Price}}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Aktuell zugewiesen an</label>
+                                {{if hasCurrentUser .Asset.CurrentUser}}
+                                    <p class="text-sm text-blue-600 font-medium">{{getEmployeeName .Employees .Asset.CurrentUser}}</p>
+                                {{else}}
+                                    <p class="text-sm text-gray-500">Nicht zugewiesen</p>
+                                {{end}}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t">
+                            <div class="flex space-x-2">
+                                <a href="/assets/{{.Asset.ID}}/edit" 
+                                   class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors text-center">
+                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
+                                </a>
+                                <a href="/assets/{{.Asset.ID}}/history" 
+                                   class="flex-1 bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700 transition-colors text-center">
+                                    <i class="fas fa-history mr-1"></i>History
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management Actions -->
+                <div class="lg:col-span-2">
+                    <div class="space-y-6">
+                        <!-- Assign Asset -->
+                        {{if eq .Asset.Status "available"}}
+                        <div class="bg-white rounded-lg shadow-sm border">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-medium text-gray-900">Asset zuweisen</h3>
+                                <p class="text-sm text-gray-500">Weisen Sie dieses Asset einem Mitarbeiter zu</p>
+                            </div>
+                            <div class="p-6">
+                                <form id="assignForm" class="space-y-4">
+                                    <div>
+                                        <label for="assign_employee" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Mitarbeiter auswählen *
+                                        </label>
+                                        <select id="assign_employee" required 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">Mitarbeiter auswählen</option>
+                                            {{range .Employees}}
+                                            <option value="{{.ID}}">{{.FirstName}} {{.LastName}} - {{.Email}} ({{.Department}})</option>
+                                            {{end}}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="assign_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Notizen (optional)
+                                        </label>
+                                        <textarea id="assign_notes" rows="3" placeholder="z.B. Grund der Zuweisung, spezielle Anweisungen..."
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                                    </div>
+                                    <button type="submit" 
+                                            class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                                        <i class="fas fa-user-plus mr-2"></i>Asset zuweisen
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {{end}}
+
+                        <!-- Transfer Asset -->
+                        {{if and (eq .Asset.Status "assigned") .Asset.CurrentUser}}
+                        <div class="bg-white rounded-lg shadow-sm border">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-medium text-gray-900">Asset übertragen</h3>
+                                <p class="text-sm text-gray-500">Übertragen Sie dieses Asset an einen anderen Mitarbeiter</p>
+                            </div>
+                            <div class="p-6">
+                                <form id="transferForm" class="space-y-4">
+                                    <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                                        <p class="text-sm text-blue-800">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Aktuell zugewiesen an: <strong>{{getEmployeeName .Employees .Asset.CurrentUser}}</strong>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label for="transfer_employee" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Neuer Mitarbeiter *
+                                        </label>
+                                        <select id="transfer_employee" required 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">Mitarbeiter auswählen</option>
+                                            {{range .Employees}}
+                                                {{if or (not $.Asset.CurrentUser) (ne .ID (deref $.Asset.CurrentUser))}}
+                                                <option value="{{.ID}}">{{.FirstName}} {{.LastName}} - {{.Email}} ({{.Department}})</option>
+                                                {{end}}
+                                            {{end}}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="transfer_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Notizen (optional)
+                                        </label>
+                                        <textarea id="transfer_notes" rows="3" placeholder="z.B. Grund der Übertragung..."
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                                    </div>
+                                    <button type="submit" 
+                                            class="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors">
+                                        <i class="fas fa-exchange-alt mr-2"></i>Asset übertragen
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Return Asset -->
+                        <div class="bg-white rounded-lg shadow-sm border">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-medium text-gray-900">Asset zurückgeben</h3>
+                                <p class="text-sm text-gray-500">Geben Sie dieses Asset in den verfügbaren Pool zurück</p>
+                            </div>
+                            <div class="p-6">
+                                <form id="returnForm" class="space-y-4">
+                                    <div>
+                                        <label for="return_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Notizen (optional)
+                                        </label>
+                                        <textarea id="return_notes" rows="3" placeholder="z.B. Grund der Rückgabe, Zustand des Assets..."
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                                    </div>
+                                    <button type="submit" 
+                                            class="w-full bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors">
+                                        <i class="fas fa-undo mr-2"></i>Asset zurückgeben
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {{end}}
+
+                        <!-- Maintenance Actions -->
+                        <div class="bg-white rounded-lg shadow-sm border">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-medium text-gray-900">Wartung & Status</h3>
+                                <p class="text-sm text-gray-500">Asset-Status für Wartung oder Ausmusterung ändern</p>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {{if ne .Asset.Status "maintenance"}}
+                                    <button onclick="changeStatus('maintenance')" 
+                                            class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                                        <i class="fas fa-tools mr-2"></i>In Wartung setzen
+                                    </button>
+                                    {{end}}
+                                    
+                                    {{if ne .Asset.Status "retired"}}
+                                    <button onclick="changeStatus('retired')" 
+                                            class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                                        <i class="fas fa-trash-alt mr-2"></i>Ausmustern
+                                    </button>
+                                    {{end}}
+                                    
+                                    {{if and (ne .Asset.Status "available") (not .Asset.CurrentUser)}}
+                                    <button onclick="changeStatus('available')" 
+                                            class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                                        <i class="fas fa-check mr-2"></i>Verfügbar machen
+                                    </button>
+                                    {{end}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+        const ASSET_ID = '{{.Asset.ID}}';
+        
+        // ===== UNIVERSAL AUTH FUNCTIONS =====
+        
+        // function getAuthToken() {
+        //     let token = localStorage.getItem('auth_token');
+        //     if (token && !token.startsWith('Bearer ')) {
+        //         token = 'Bearer ' + token;
+        //     }
+        //     if (token) {
+        //         console.log('🔑 Token from localStorage:', token.substring(0, 20) + '...');
+        //         return token;
+        //     }
+            
+        //     const cookies = document.cookie.split(';');
+        //     for (let cookie of cookies) {
+        //         const [name, value] = cookie.trim().split('=');
+        //         if (name === 'auth_token' && value) {
+        //             const cookieToken = 'Bearer ' + value;
+        //             console.log('🍪 Token from cookie:', cookieToken.substring(0, 20) + '...');
+        //             return cookieToken;
+        //         }
+        //     }
+            
+        //     console.log('❌ No auth token found in localStorage or cookies');
+        //     return null;
+        // }
+
+        function clearAuth() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+
+        function redirectToLogin(message = 'Sitzung abgelaufen') {
+            clearAuth();
+            window.location.href = '/login?error=' + encodeURIComponent(message);
+        }
+
+        // Universelle API-Request Funktion mit automatischer Auth
+        async function apiRequest(endpoint, method = 'POST', data = null) {
+            console.log(`📡 API Request: ${method} ${API_BASE}${endpoint}`);
+            
+            try {
+                const token = getAuthToken();
+                
+                if (!token) {
+                    console.error('❌ No auth token available');
+                    redirectToLogin('Authentifizierung erforderlich');
+                    return;
+                }
+                
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                    console.log('📤 Request data:', data);
+                }
+                
+                const response = await fetch(API_BASE + endpoint, options);
+                console.log(`📨 Response status: ${response.status}`);
+                
+                if (response.status === 401) {
+                    console.log('🚫 Unauthorized - redirecting to login');
+                    redirectToLogin('Sitzung abgelaufen');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch {
+                        errorData = { error: errorText || `HTTP ${response.status}` };
+                    }
+                    
+                    console.error('❌ API Error Response:', errorData);
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ API Success:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ API Request failed:', error);
+                throw error;
+            }
+        }
+
+        // Helper functions
+        async function apiPost(endpoint, data) {
+            return apiRequest(endpoint, 'POST', data);
+        }
+
+        // Error Message Helper
+        function showMessage(message, type = 'success') {
+            const messagesDiv = document.getElementById('messages');
+            if (!messagesDiv) {
+                console.warn('No messages div found');
+                alert(`${type.toUpperCase()}: ${message}`);
+                return;
+            }
+            
+            const messageDiv = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            
+            messageDiv.className = `${bgColor} px-4 py-3 rounded mb-4 border`;
+            messageDiv.innerHTML = `<i class="fas ${icon} mr-2"></i>${message}`;
+            
+            messagesDiv.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // ===== ASSET MANAGEMENT FUNCTIONS =====
+
+        // Asset Assignment
+        async function assignAsset(employeeId, notes) {
+            try {
+                console.log(`🎯 Assigning asset ${ASSET_ID} to employee ${employeeId}`);
+                
+                const result = await apiPost(`/assets/${ASSET_ID}/assign`, {
+                    employee_id: parseInt(employeeId),
+                    notes: notes
+                });
+                
+                showMessage('Asset wurde erfolgreich zugewiesen!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+                
+            } catch (error) {
+                console.error('❌ Assignment failed:', error);
+                showMessage(`Fehler beim Zuweisen: ${error.message}`, 'error');
+            }
+        }
+
+        // Asset Transfer
+        async function transferAsset(toEmployeeId, notes) {
+            try {
+                console.log(`🔄 Transferring asset ${ASSET_ID} to employee ${toEmployeeId}`);
+                
+                const result = await apiPost(`/assets/${ASSET_ID}/transfer`, {
+                    to_employee_id: parseInt(toEmployeeId),
+                    notes: notes
+                });
+                
+                showMessage('Asset wurde erfolgreich übertragen!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+                
+            } catch (error) {
+                console.error('❌ Transfer failed:', error);
+                showMessage(`Fehler beim Übertragen: ${error.message}`, 'error');
+            }
+        }
+
+        // Asset Return
+        async function returnAsset(notes) {
+            try {
+                console.log(`📤 Returning asset ${ASSET_ID}`);
+                
+                const result = await apiPost(`/assets/${ASSET_ID}/unassign`, {
+                    notes: notes,
+                    force: true
+                });
+                
+                showMessage('Asset wurde erfolgreich zurückgegeben!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+                
+            } catch (error) {
+                console.error('❌ Return failed:', error);
+                showMessage(`Fehler beim Zurückgeben: ${error.message}`, 'error');
+            }
+        }
+
+        // Status Change
+        async function changeStatus(newStatus) {
+            try {
+                console.log(`🔧 Changing asset ${ASSET_ID} status to ${newStatus}`);
+                
+                let actionText;
+                switch(newStatus) {
+                    case 'maintenance': actionText = 'in Wartung gesetzt'; break;
+                    case 'retired': actionText = 'ausgemustert'; break;
+                    case 'available': actionText = 'verfügbar gemacht'; break;
+                    default: actionText = 'geändert';
+                }
+                
+                if (newStatus === 'retired' && !confirm('Sind Sie sicher, dass Sie dieses Asset ausmustern möchten?')) {
+                    return;
+                }
+                
+                const result = await apiPost(`/assets/${ASSET_ID}/status`, {
+                    status: newStatus,
+                    notes: `Status ${actionText} über Asset-Verwaltung`
+                });
+                
+                showMessage(`Asset wurde erfolgreich ${actionText}!`, 'success');
+                setTimeout(() => window.location.reload(), 1500);
+                
+            } catch (error) {
+                console.error('❌ Status change failed:', error);
+                showMessage(`Fehler beim Ändern des Status: ${error.message}`, 'error');
+            }
+        }
+
+        // ===== EVENT HANDLERS =====
+
+        // Assignment Form
+        document.getElementById('assignForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const employeeId = document.getElementById('assign_employee').value;
+            const notes = document.getElementById('assign_notes').value;
+            
+            if (!employeeId) {
+                showMessage('Bitte wählen Sie einen Mitarbeiter aus', 'error');
+                return;
+            }
+            
+            await assignAsset(employeeId, notes);
+        });
+
+        // Transfer Form
+        document.getElementById('transferForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const toEmployeeId = document.getElementById('transfer_employee').value;
+            const notes = document.getElementById('transfer_notes').value;
+            
+            if (!toEmployeeId) {
+                showMessage('Bitte wählen Sie einen Mitarbeiter aus', 'error');
+                return;
+            }
+            
+            await transferAsset(toEmployeeId, notes);
+        });
+
+        // Return Form
+        document.getElementById('returnForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const notes = document.getElementById('return_notes').value;
+            await returnAsset(notes);
+        });
+
+        // Token validation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Validating authentication...');
+            heckUserPermissions();
+            const token = getAuthToken();
+            if (!token) {
+                console.log('❌ No auth token found on page load');
+                redirectToLogin('Authentifizierung erforderlich');
+                return;
+            }
+            
+            // Optional: Validate token
+            fetch(API_BASE + '/user/profile', {
+                headers: { 'Authorization': token }
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Token is valid');
+                } else if (response.status === 401) {
+                    console.log('❌ Token expired');
+                    redirectToLogin('Sitzung abgelaufen');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Token validation error:', error);
+            });
+        });
+
+        console.log('🔐 Asset management system initialized');
+    
+        // Check user permissions
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     checkUserPermissions();
+    // });
+    async function checkUserPermissions() {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await fetch(`${API_BASE}/user/profile`, {
+                headers: { 'Authorization': token }
+            });
+
+            if (response.ok) {
+                const currentUser = await response.json();
+                
+                if (currentUser.is_admin) {
+                    // Show admin features
+                    document.getElementById('admin-link').style.display = 'block';
+                    // document.getElementById('create-employee-btn').style.display = 'inline-flex';
+                    
+                    // Show admin-only buttons
+                    document.querySelectorAll('.admin-only').forEach(btn => {
+                        btn.style.display = 'inline-block';
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error checking permissions:', error);
+        }
+    }
+ 
+    // Token-Hilfsfunktionen
+    function getAuthToken() {
+        // 1. Versuche localStorage
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            return 'Bearer ' + token;
+        }
+        
+        // 2. Versuche Cookie
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'auth_token') {
+                return 'Bearer ' + value;
+            }
+        }
+        
+        return null;
+    }
+    </script>
+
+{{end}}

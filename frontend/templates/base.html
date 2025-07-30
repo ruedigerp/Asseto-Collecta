@@ -1,0 +1,46 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    {{template "base_meta" .}}
+</head>
+<body class="bg-gray-50">
+    {{template "base_header" .}}
+    {{template "base_nav" .}}
+    <!-- load content template -->
+    <!-- <main> -->
+    <!-- Template: {{.Template}} -->
+     <script>
+        console.log("Template: {{.Template}}");
+     </script>
+    {{if eq .Template "employees-content"}}
+        {{template "employees-content" .}}
+    {{else if eq .Template "employee-create-content"}}
+        {{template "employee-create-content" .}}
+    {{else if eq .Template "employee-edit-content"}}
+        {{template "employee-edit-content" .}}
+    {{else if eq .Template "assets-content"}}
+        {{template "assets-content" .}}
+    {{else if eq .Template "asset-create-content" }}
+        {{template "asset-create-content" . }}
+    {{else if eq .Template "asset-edit-content" }}
+        {{template "asset-edit-content" . }}
+    {{else if eq .Template "assets-history-content" }}
+        {{template "assets-history-content" . }}
+    {{else if eq .Template "asset-manage-content" }}
+        {{template "asset-manage-content" . }}
+    {{else if eq .Template "index-content" }}
+        {{template "index-content" . }}
+    {{else if eq .Template "set-password-content" }}
+        {{template "set-password-content" . }}   
+    {{else if eq .Template "admin-dashboard-content" }}
+        {{template "admin-dashboard-content" . }}
+    {{else}}
+        {{template "content" .}}
+    {{end}}
+    <!-- </main> -->
+     <!-- end content template -->
+    {{template "base-footer-content" . }}
+{{end}}
+</body>
+</html>

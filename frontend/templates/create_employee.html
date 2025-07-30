@@ -1,0 +1,456 @@
+{{template "base" .}}
+{{define "employee-create-content"}}
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-6">
+            <!-- Header with Back Button -->
+            <div class="flex items-center space-x-4">
+                <a href="/employees" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </a>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Neuen Mitarbeiter erstellen</h2>
+                    <p class="text-gray-600">Fügen Sie einen neuen Mitarbeiter zum System hinzu</p>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <script>
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                const success = urlParams.get('success');
+                
+                if (error) {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+                        errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>${error}`;
+                        document.getElementById('messages').appendChild(errorDiv);
+                    });
+                }
+            </script>
+            <div id="messages"></div>
+
+            <!-- Create Employee Form -->
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-medium text-gray-900">Mitarbeiter Informationen</h3>
+                    <p class="text-sm text-gray-500">Alle Felder mit * sind Pflichtfelder</p>
+                </div>
+                <form method="POST" action="/employees/create" class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- First Name -->
+                        <div>
+                            <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Vorname *
+                            </label>
+                            <input type="text" name="first_name" id="first_name" required
+                                   placeholder="z.B. Max"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Last Name -->
+                        <div>
+                            <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nachname *
+                            </label>
+                            <input type="text" name="last_name" id="last_name" required
+                                   placeholder="z.B. Mustermann"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                E-Mail-Adresse *
+                            </label>
+                            <input type="email" name="email" id="email" required
+                                   placeholder="z.B. max.mustermann@firma.de"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Department -->
+                        <div>
+                            <label for="department" class="block text-sm font-medium text-gray-700 mb-2">
+                                Abteilung
+                            </label>
+                            <select name="department" id="department" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Abteilung auswählen</option>
+                                <option value="IT">IT</option>
+                                <option value="HR">HR / Personal</option>
+                                <option value="Finance">Finanzen</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Sales">Vertrieb</option>
+                                <option value="Operations">Operations</option>
+                                <option value="Management">Management</option>
+                                <option value="Support">Support</option>
+                                <option value="Development">Entwicklung</option>
+                                <option value="Design">Design</option>
+                                <option value="Legal">Recht</option>
+                                <option value="Other">Andere</option>
+                            </select>
+                        </div>
+
+                        <!-- Admin Rights -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Berechtigungen
+                            </label>
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="is_admin" name="is_admin" 
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="is_admin" class="ml-2 block text-sm text-gray-900">
+                                        Administrator-Berechtigung
+                                        <span class="block text-xs text-gray-500">Kann Assets verwalten und andere Mitarbeiter bearbeiten</span>
+                                    </label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="is_active" name="is_active" checked
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                                        Account aktiv
+                                        <span class="block text-xs text-gray-500">Kann sich am System anmelden</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Information -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-yellow-800 mb-2">
+                            <i class="fas fa-key mr-1"></i>
+                            Passwort-Information
+                        </h4>
+                        <p class="text-xs text-yellow-700">
+                            <strong>Normale Mitarbeiter:</strong> Erhalten zunächst kein Passwort und können sich nicht anmelden.<br>
+                            <strong>Administratoren:</strong> Erhalten automatisch ein temporäres Passwort, das beim ersten Login geändert werden muss.
+                        </p>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-between pt-6 border-t">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Der Mitarbeiter wird sofort im System erstellt
+                        </div>
+                        <div class="space-x-3">
+                            <a href="/employees" 
+                               class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                                Abbrechen
+                            </a>
+                            <button type="submit" 
+                                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>Mitarbeiter erstellen
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="bg-gray-50 rounded-lg border p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Live-Vorschau</h3>
+                <div class="bg-white rounded-lg shadow-sm border p-4">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                            <span class="text-lg font-medium text-blue-600" id="preview-initials">
+                                MM
+                            </span>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900" id="preview-name">Max Mustermann</h4>
+                            <p class="text-sm text-gray-500" id="preview-email">max.mustermann@firma.de</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" id="preview-department">
+                                IT
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+        console.log('👥 Create Employee page loaded');
+        console.log('📍 API Base URL:', API_BASE);
+
+        // Live preview functionality
+        function updatePreview() {
+            const firstName = document.getElementById('first_name').value || 'Max';
+            const lastName = document.getElementById('last_name').value || 'Mustermann';
+            const email = document.getElementById('email').value || 'max.mustermann@firma.de';
+            const department = document.getElementById('department').value || 'IT';
+            const isAdmin = document.getElementById('is_admin').checked;
+            const isActive = document.getElementById('is_active').checked;
+
+            // Update initials
+            const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+            document.getElementById('preview-initials').textContent = initials;
+            
+            // Update name
+            document.getElementById('preview-name').textContent = `${firstName} ${lastName}`;
+            if (isAdmin) {
+                document.getElementById('preview-name').innerHTML += ' <span class="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full ml-2">Admin</span>';
+            }
+            
+            // Update email
+            document.getElementById('preview-email').textContent = email;
+            
+            // Update department with status indicator
+            let departmentText = department || 'Keine Abteilung';
+            if (!isActive) {
+                departmentText += ' (Deaktiviert)';
+            }
+            document.getElementById('preview-department').textContent = departmentText;
+            
+            // Update department badge color based on admin status
+            const departmentBadge = document.getElementById('preview-department');
+            if (isAdmin) {
+                departmentBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
+            } else {
+                departmentBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
+            }
+        }
+
+        // Add event listeners for live preview
+        document.addEventListener('DOMContentLoaded', function() {
+            const formElements = ['first_name', 'last_name', 'email', 'department', 'is_admin', 'is_active'];
+            formElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updatePreview);
+                    element.addEventListener('change', updatePreview);
+                }
+            });
+
+            updatePreview();
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const firstName = document.getElementById('first_name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!firstName || !lastName || !email) {
+                e.preventDefault();
+                alert('Bitte füllen Sie alle Pflichtfelder aus.');
+                return false;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+                return false;
+            }
+
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mitarbeiter wird erstellt...';
+            
+            console.log('📝 Submitting new employee:', {
+                firstName, lastName, email
+            });
+        });
+    // </script>
+    // <script>
+    // const API_BASE = '{{.APIBaseURL}}';
+    
+    // // Token-Hilfsfunktionen
+    // function getAuthToken() {
+    //     // 1. Versuche localStorage
+    //     const token = localStorage.getItem('auth_token');
+    //     if (token) {
+    //         return 'Bearer ' + token;
+    //     }
+        
+    //     // 2. Versuche Cookie
+    //     const cookies = document.cookie.split(';');
+    //     for (let cookie of cookies) {
+    //         const [name, value] = cookie.trim().split('=');
+    //         if (name === 'auth_token') {
+    //             return 'Bearer ' + value;
+    //         }
+    //     }
+        
+    //     return null;
+    // }
+    
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+    
+    // Erweiterte API-Request-Funktion mit automatischer Token-Einbindung
+    async function apiRequest(endpoint, method = 'GET', data = null) {
+        const token = getAuthToken();
+        
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        
+        // Token hinzufügen wenn vorhanden
+        if (token) {
+            options.headers['Authorization'] = token;
+        }
+        
+        if (data && method !== 'GET') {
+            options.body = JSON.stringify(data);
+        }
+        
+        try {
+            const response = await fetch(API_BASE + endpoint, options);
+            
+            // Bei 401 zur Login-Seite weiterleiten
+            if (response.status === 401) {
+                console.log('🚫 Unauthorized - redirecting to login');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.location.href = '/login?error=' + encodeURIComponent('Sitzung abgelaufen');
+                return;
+            }
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    }
+    
+    // Teste Token-Gültigkeit beim Laden der Seite
+    document.addEventListener('DOMContentLoaded', function() {
+        const token = getAuthToken();
+        
+        if (!token) {
+            console.log('❌ No auth token found');
+            // Bereits in protected Route - sollte nicht passieren
+            return;
+        }
+        
+        console.log('🔍 Checking token validity...');
+        
+        // Test API call zur Validierung
+        fetch(API_BASE + '/user/profile', {
+            headers: {
+                'Authorization': token
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('✅ Token is valid');
+                return response.json();
+            } else if (response.status === 401) {
+                console.log('❌ Token expired, redirecting to login');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.location.href = '/login?error=' + encodeURIComponent('Sitzung abgelaufen');
+            } else {
+                console.log('⚠️ Token validation failed:', response.status);
+            }
+        })
+        .then(userData => {
+            if (userData) {
+                console.log('👤 Logged in user:', userData.first_name, userData.last_name);
+                localStorage.setItem('user_data', JSON.stringify(userData));
+            }
+        })
+        .catch(error => {
+            console.error('❌ Token validation error:', error);
+        });
+    });
+    
+    // Logout-Funktion
+    function logout() {
+        console.log('👋 Logging out...');
+        
+        // Clear storage
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        // Optional: Backend logout call
+        fetch(API_BASE + '/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': getAuthToken()
+            }
+        }).catch(console.error);
+        
+        // Redirect to login
+        window.location.href = '/login?message=' + encodeURIComponent('Sie wurden erfolgreich abgemeldet');
+    }
+        // Check user permissions
+    document.addEventListener('DOMContentLoaded', function() {
+        checkUserPermissions();
+    });
+    async function checkUserPermissions() {
+        try {
+            const token = getAuthToken();
+            if (!token) return;
+
+            const response = await fetch(`${API_BASE}/user/profile`, {
+                headers: { 'Authorization': token }
+            });
+
+            if (response.ok) {
+                const currentUser = await response.json();
+                
+                if (currentUser.is_admin) {
+                    // Show admin features
+                    document.getElementById('admin-link').style.display = 'block';
+                    // document.getElementById('create-employee-btn').style.display = 'inline-flex';
+                    
+                    // Show admin-only buttons
+                    document.querySelectorAll('.admin-only').forEach(btn => {
+                        btn.style.display = 'inline-block';
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error checking permissions:', error);
+        }
+    }
+ 
+    // Token-Hilfsfunktionen
+    function getAuthToken() {
+        // 1. Versuche localStorage
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            return 'Bearer ' + token;
+        }
+        
+        // 2. Versuche Cookie
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'auth_token') {
+                return 'Bearer ' + value;
+            }
+        }
+        
+        return null;
+    }
+</script>
+{{end}}

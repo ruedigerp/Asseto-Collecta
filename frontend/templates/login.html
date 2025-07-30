@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Asset Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <div class="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-laptop text-white text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Asseto Collecta - Asset Management System
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Melden Sie sich mit Ihren Zugangsdaten an
+            </p>
+        </div>
+        
+        <!-- Messages -->
+        <div id="messages"></div>
+        
+        <form class="mt-8 space-y-6" id="loginForm">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email" class="sr-only">E-Mail-Adresse</label>
+                    <input id="email" name="email" type="email" required 
+                           class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                           placeholder="E-Mail-Adresse">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Passwort</label>
+                    <input id="password" name="password" type="password" required 
+                           class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                           placeholder="Passwort">
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <i class="fas fa-lock text-blue-500 group-hover:text-blue-400"></i>
+                    </span>
+                    Anmelden
+                </button>
+            </div>
+        </form>
+        
+        <div class="text-center">
+            <p class="text-xs text-gray-500">
+                Bei Problemen wenden Sie sich an Ihren Administrator
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+        
+        function showMessage(message, type = 'error') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            
+            messageDiv.className = `${bgColor} px-4 py-3 rounded border mb-4`;
+            messageDiv.innerHTML = `<i class="fas ${icon} mr-2"></i>${message}`;
+            
+            messagesDiv.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Cookie-Hilfsfunktionen
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showMessage('Bitte füllen Sie alle Felder aus.', 'error');
+                return;
+            }
+            
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Anmeldung läuft...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Anmeldung fehlgeschlagen');
+                }
+                
+                console.log('✅ Login successful:', data);
+                
+                // Token sowohl in localStorage ALS AUCH als Cookie speichern
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('user_data', JSON.stringify(data.employee));
+                
+                // WICHTIG: Cookie setzen für Backend-Middleware
+                setCookie('auth_token', data.token, 1); // 1 Tag gültig
+                
+                showMessage('Anmeldung erfolgreich! Sie werden weitergeleitet...', 'success');
+                
+                // Kleine Verzögerung damit Cookie gesetzt wird
+                setTimeout(() => {
+                    // Direkt zur Hauptseite weiterleiten
+                    window.location.href = '/';
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                showMessage(error.message || 'Anmeldung fehlgeschlagen', 'error');
+                
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        });
+
+        // Check if already logged in
+        const existingToken = getCookie('auth_token') || localStorage.getItem('auth_token');
+        if (existingToken) {
+            console.log('🔍 Checking existing token...');
+            
+            // Stelle sicher, dass Cookie gesetzt ist
+            if (!getCookie('auth_token') && localStorage.getItem('auth_token')) {
+                setCookie('auth_token', localStorage.getItem('auth_token'), 1);
+            }
+            
+            fetch(`${API_BASE}/user/profile`, {
+                headers: {
+                    'Authorization': 'Bearer ' + existingToken
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Token still valid, redirecting...');
+                    window.location.href = '/';
+                } else {
+                    console.log('❌ Token invalid, clearing storage');
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_data');
+                    deleteCookie('auth_token');
+                }
+            })
+            .catch(() => {
+                console.log('❌ Token check failed, clearing storage');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                deleteCookie('auth_token');
+            });
+        }
+
+        // Handle URL parameters for messages
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const message = urlParams.get('message');
+        
+        if (error) {
+            showMessage(decodeURIComponent(error), 'error');
+        }
+        if (message) {
+            showMessage(decodeURIComponent(message), 'success');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: asset-mngt
+---
+apiVersion: v1
+data:
+  init.sql: '-- SQL INIT PLACEHOLDER
+
+    '
+kind: ConfigMap
+metadata:
+  name: mariadb-init
+  namespace: asset-mngt
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-data
+  namespace: asset-mngt
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: asset-mngt
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: asset-mngt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - env:
+        - name: MARIADB_ROOT_PASSWORD
+          value: rootpassword
+        - name: MARIADB_DATABASE
+          value: asset_db
+        - name: MARIADB_USER
+          value: asset_user
+        - name: MARIADB_PASSWORD
+          value: asset_password
+        - name: MARIADB_CHARACTER_SET_SERVER
+          value: utf8mb4
+        - name: MARIADB_COLLATION_SERVER
+          value: utf8mb4_unicode_ci
+        image: mariadb:11.0
+        name: mariadb
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mariadb-data
+        - mountPath: /docker-entrypoint-initdb.d/init.sql
+          name: init-sql
+          subPath: init.sql
+      volumes:
+      - name: mariadb-data
+        persistentVolumeClaim:
+          claimName: mariadb-data
+      - configMap:
+          name: mariadb-init
+        name: init-sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: asset-mngt
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: mariadb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: asset-mngt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - args:
+        - redis-server
+        - --appendonly
+        - 'yes'
+        image: redis:7-alpine
+        name: redis
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - mountPath: /data
+          name: redis-data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: asset-mngt
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asset-api
+  namespace: asset-mngt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asset-api
+  template:
+    metadata:
+      labels:
+        app: asset-api
+    spec:
+      containers:
+      - image: ghcr.io/ruedigerp/asset-mngt-api:v0.0.7
+        name: asset-api
+        ports:
+        - containerPort: 8090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asset-api
+  namespace: asset-mngt
+spec:
+  ports:
+  - port: 8090
+    targetPort: 8090
+  selector:
+    app: asset-api
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asset-mngt-frontend-config
+  namespace: asset-mngt
+data:
+  API_URL: "https://assets-api.dev.kuepper.nrw"
+  # API_URL: "http://localhost:8090"
+  PORT: "3000"
+  ENVIRONMENT: "development"
+  DEBUG: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asset-fe
+  namespace: asset-mngt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asset-fe
+  template:
+    metadata:
+      labels:
+        app: asset-fe
+    spec:
+      containers:
+      - image: ghcr.io/ruedigerp/asset-mngt-frontend:v0.0.31
+        name: asset-fe
+        envFrom:
+        - configMapRef:
+            name: asset-mngt-frontend-config
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asset-fe
+  namespace: asset-mngt
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3000
+  selector:
+    app: asset-fe
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: phpmyadmin
+#   namespace: asset-mngt
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: phpmyadmin
+#   template:
+#     metadata:
+#       labels:
+#         app: phpmyadmin
+#     spec:
+#       containers:
+#       - env:
+#         - name: PMA_HOST
+#           value: mariadb
+#         - name: PMA_USER
+#           value: asset_user
+#         - name: PMA_PASSWORD
+#           value: asset_password
+#         - name: MYSQL_ROOT_PASSWORD
+#           value: rootpassword
+#         image: phpmyadmin/phpmyadmin:latest
+#         name: phpmyadmin
+#         ports:
+#         - containerPort: 80
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: phpmyadmin
+#   namespace: asset-mngt
+# spec:
+#   ports:
+#   - port: 80
+#     targetPort: 80
+#   selector:
+#     app: phpmyadmin
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-scheme@kubernetescrd
+  name: asset-fe
+  namespace: asset-mngt
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: assets.dev.kuepper.nrw
+    http:
+      paths:
+      - backend:
+          service:
+            name: asset-fe
+            port:
+              number: 3000
+        path: /
+        pathType: Prefix
+  - host: assets-api.dev.kuepper.nrw
+    http:
+      paths:
+      - backend:
+          service:
+            name: asset-api
+            port:
+              number: 8090
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - assets.dev.kuepper.nrw
+    - assets-api.dev.kuepper.nrw
+    secretName: assets.dev.kuepper.nrw-tls

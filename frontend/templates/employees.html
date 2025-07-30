@@ -1,0 +1,476 @@
+{{template "base" .}}
+{{define "employees-content"}}
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-users mr-2"></i>Mitarbeiter ({{len .Employees}})
+                    </h2>
+                    <p class="text-gray-600 mt-1">Verwalten Sie alle Mitarbeiter Ihres Unternehmens</p>
+                </div>
+                <div class="flex space-x-3">
+                    <!-- Filter Buttons -->
+                    <div class="flex items-center space-x-2 mr-4">
+                        <button onclick="filterEmployees('all')" 
+                                class="filter-btn active bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300 transition-colors">
+                            Alle
+                        </button>
+                        <button onclick="filterEmployees('active')" 
+                                class="filter-btn bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm hover:bg-green-200 transition-colors">
+                            Aktiv
+                        </button>
+                        <button onclick="filterEmployees('inactive')" 
+                                class="filter-btn bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm hover:bg-red-200 transition-colors">
+                            Deaktiviert
+                        </button>
+                        <button onclick="filterEmployees('admin')" 
+                                class="filter-btn bg-purple-100 text-purple-700 px-3 py-1 rounded-md text-sm hover:bg-purple-200 transition-colors">
+                            Admins
+                        </button>
+                    </div>
+
+                    <button onclick="window.location.reload()" 
+                            class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Aktualisieren</span>
+                    </button>
+                    <a href="/employees/create" 
+                       class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                       id="create-employee-btn" style="display: none;">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Neuer Mitarbeiter</span>
+                    </a>
+                </div>
+            </div>
+            
+            {{if .Employees}}
+            <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name & Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-Mail</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Abteilung</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assets</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Letzter Login</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {{range .Employees}}
+                        <tr class="employee-row hover:bg-gray-50" 
+                            data-active="{{.IsActive}}" 
+                            data-admin="{{.IsAdmin}}"
+                            data-has-assets="{{if getAssetsForEmployee $.Assets .ID}}true{{else}}false{{end}}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full {{if .IsActive}}{{if .IsAdmin}}bg-purple-100{{else}}bg-blue-100{{end}}{{else}}bg-gray-100{{end}} flex items-center justify-center relative">
+                                            <span class="text-sm font-medium {{if .IsActive}}{{if .IsAdmin}}text-purple-600{{else}}text-blue-600{{end}}{{else}}text-gray-500{{end}}">
+                                                {{slice .FirstName 0 1}}{{slice .LastName 0 1}}
+                                            </span>
+                                            <!-- Admin Crown Icon -->
+                                            {{if .IsAdmin}}
+                                                <div class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-yellow-400 border-2 border-white flex items-center justify-center">
+                                                    <i class="fas fa-crown text-xs text-yellow-800"></i>
+                                                </div>
+                                            {{else}}
+                                                <!-- Status Indicator -->
+                                                <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white
+                                                    {{if .IsActive}}bg-green-500{{else}}bg-red-500{{end}}">
+                                                </div>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="text-sm font-medium {{if .IsActive}}text-gray-900{{else}}text-gray-500{{end}}">
+                                                {{.FirstName}} {{.LastName}}
+                                            </div>
+                                            <!-- Status Badges -->
+                                            <div class="flex flex-wrap gap-1">
+                                                {{if .IsAdmin}}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                                        <i class="fas fa-crown mr-1 text-yellow-600"></i>ADMIN
+                                                    </span>
+                                                {{end}}
+                                                {{if .IsActive}}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        <i class="fas fa-check-circle mr-1"></i>Aktiv
+                                                    </span>
+                                                {{else}}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        <i class="fas fa-times-circle mr-1"></i>Deaktiviert
+                                                    </span>
+                                                {{end}}
+                                                {{if not .LastLogin}}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                        <i class="fas fa-exclamation-triangle mr-1"></i>Neu
+                                                    </span>
+                                                {{end}}
+                                            </div>
+                                        </div>
+                                        <div class="text-sm text-gray-500">ID: {{.ID}}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="mailto:{{.Email}}" class="text-sm {{if .IsActive}}text-blue-600 hover:text-blue-800{{else}}text-gray-500{{end}}">
+                                    {{.Email}}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{if .Department}}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        {{if .IsActive}}bg-gray-100 text-gray-800{{else}}bg-gray-50 text-gray-500{{end}}">
+                                        {{.Department}}
+                                    </span>
+                                {{else}}
+                                    <span class="text-gray-400">-</span>
+                                {{end}}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{$employeeAssets := getAssetsForEmployee $.Assets .ID}}
+                                {{$assetCount := countAssetsForEmployee $.Assets .ID}}
+                                <div class="space-y-1">
+                                    {{if $employeeAssets}}
+                                        <div class="mb-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{$assetCount}} Asset{{if ne $assetCount 1}}s{{end}}
+                                            </span>
+                                        </div>
+                                        {{range $employeeAssets}}
+                                            <!-- <div class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded flex items-center justify-between"> -->
+                                            <div class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded flex flex-col space-y-1">
+                                                <span>{{.Name}} {{.DeviceType}}</span>
+                                                <span class="text-gray-500">({{.SerialNumber}})</span>
+                                            </div>
+                                        {{end}}
+                                    {{else}}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                            <i class="fas fa-minus-circle mr-1"></i>
+                                            Keine Assets
+                                        </span>
+                                    {{end}}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div>
+                                    {{if .LastLogin}}
+                                        <div>{{formatDate .LastLogin}}</div>
+                                        <div class="text-xs text-gray-400">{{timeSince .LastLogin}} her</div>
+                                    {{else}}
+                                        <div class="text-red-600">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                            Noch nie
+                                        </div>
+                                        <div class="text-xs text-gray-400">Kein Login</div>
+                                    {{end}}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex space-x-2">
+                                    <a href="/employees/{{.ID}}/edit" 
+                                       class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+                                       title="Bearbeiten">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {{if .IsActive}}
+                                        <button onclick="quickToggleStatus({{.ID}}, false)" 
+                                                class="bg-orange-600 text-white px-2 py-1 rounded text-xs hover:bg-orange-700 transition-colors admin-only"
+                                                title="Deaktivieren" style="display: none;">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    {{else}}
+                                        <button onclick="quickToggleStatus({{.ID}}, true)" 
+                                                class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors admin-only"
+                                                title="Aktivieren" style="display: none;">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    {{end}}
+                                    <button onclick="confirmDelete({{.ID}}, '{{.FirstName}} {{.LastName}}')" 
+                                            class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors admin-only"
+                                            title="Löschen" style="display: none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Total Employees -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-2xl text-blue-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Mitarbeiter gesamt</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{len .Employees}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Employees -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-check text-2xl text-green-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Aktive Mitarbeiter</p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {{$activeEmployees := 0}}
+                                {{range .Employees}}{{if .IsActive}}{{$activeEmployees = add $activeEmployees 1}}{{end}}{{end}}
+                                {{$activeEmployees}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inactive Employees -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-slash text-2xl text-red-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Deaktivierte Mitarbeiter</p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {{$inactiveEmployees := 0}}
+                                {{range .Employees}}{{if not .IsActive}}{{$inactiveEmployees = add $inactiveEmployees 1}}{{end}}{{end}}
+                                {{$inactiveEmployees}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Employees -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-crown text-2xl text-purple-600 mr-4"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Administratoren</p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {{$adminEmployees := 0}}
+                                {{range .Employees}}{{if .IsAdmin}}{{$adminEmployees = add $adminEmployees 1}}{{end}}{{end}}
+                                {{$adminEmployees}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{else}}
+            <div class="text-center py-12">
+                <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Keine Mitarbeiter gefunden</h3>
+                <p class="text-gray-500 mb-4">Erstellen Sie Ihren ersten Mitarbeiter, um zu beginnen.</p>
+                <div class="space-x-2">
+                    <a href="/employees/create" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>Ersten Mitarbeiter erstellen
+                    </a>
+                    <a href="{{.APIBaseURL}}/employees" target="_blank" class="bg-gray-600 text-white px-4 py-3 rounded hover:bg-gray-700">
+                        API direkt testen
+                    </a>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-3"></i>
+                <h3 class="text-lg font-medium text-gray-900">Mitarbeiter löschen</h3>
+            </div>
+            <p class="text-gray-600 mb-6" id="deleteMessage">
+                Sind Sie sicher, dass Sie diesen Mitarbeiter löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+            <div class="flex space-x-3">
+                <button onclick="hideDeleteModal()" 
+                        class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                    Abbrechen
+                </button>
+                <button onclick="executeDelete()" 
+                        class="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                    Löschen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+        let deleteEmployeeId = null;
+
+        console.log('👥 Employees page loaded');
+        console.log('📍 API Base URL:', API_BASE);
+        console.log('📊 Employees count:', {{len .Employees}});
+
+        // Filter functionality
+        function filterEmployees(filter) {
+            const rows = document.querySelectorAll('.employee-row');
+            const buttons = document.querySelectorAll('.filter-btn');
+            
+            // Update button states
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            rows.forEach(row => {
+                const isActive = row.getAttribute('data-active') === 'true';
+                const isAdmin = row.getAttribute('data-admin') === 'true';
+                
+                let show = false;
+                
+                switch(filter) {
+                    case 'all':
+                        show = true;
+                        break;
+                    case 'active':
+                        show = isActive;
+                        break;
+                    case 'inactive':
+                        show = !isActive;
+                        break;
+                    case 'admin':
+                        show = isAdmin;
+                        break;
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Quick status toggle
+        async function quickToggleStatus(employeeId, newStatus) {
+            try {
+                const token = getAuthToken();
+                if (!token) {
+                    alert('Nicht authentifiziert');
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/employees/${employeeId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ is_active: newStatus })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Fehler beim Ändern des Status: ' + (error.error || 'Unbekannter Fehler'));
+                }
+            } catch (error) {
+                console.error('Status toggle error:', error);
+                alert('Fehler beim Ändern des Status: ' + error.message);
+            }
+        }
+
+        // Delete modal functions
+        function confirmDelete(employeeId, employeeName) {
+            deleteEmployeeId = employeeId;
+            document.getElementById('deleteMessage').innerHTML = 
+                `Sind Sie sicher, dass Sie <strong>${employeeName}</strong> löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.`;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function hideDeleteModal() {
+            deleteEmployeeId = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        async function executeDelete() {
+            if (!deleteEmployeeId) return;
+
+            try {
+                const token = getAuthToken();
+                const response = await fetch(`${API_BASE}/employees/${deleteEmployeeId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': token }
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Fehler beim Löschen: ' + (error.error || 'Unbekannter Fehler'));
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Fehler beim Löschen: ' + error.message);
+            }
+
+            hideDeleteModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) hideDeleteModal();
+        });
+
+        // ESC key to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') hideDeleteModal();
+        });
+
+        // Check user permissions
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserPermissions();
+        });
+
+        async function checkUserPermissions() {
+            try {
+                const token = getAuthToken();
+                if (!token) return;
+
+                const response = await fetch(`${API_BASE}/user/profile`, {
+                    headers: { 'Authorization': token }
+                });
+
+                if (response.ok) {
+                    const currentUser = await response.json();
+                    
+                    if (currentUser.is_admin) {
+                        // Show admin features
+                        document.getElementById('admin-link').style.display = 'block';
+                        document.getElementById('create-employee-btn').style.display = 'inline-flex';
+                        
+                        // Show admin-only buttons
+                        document.querySelectorAll('.admin-only').forEach(btn => {
+                            btn.style.display = 'inline-block';
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking permissions:', error);
+            }
+        }
+
+        // Token helper function
+        function getAuthToken() {
+            const token = localStorage.getItem('auth_token');
+            if (token && token !== 'deleted') {
+                return 'Bearer ' + token;
+            }
+            
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'auth_token' && value && value !== 'deleted') {
+                    return 'Bearer ' + value;
+                }
+            }
+            
+            return null;
+        }
+    </script>
+{{end}}

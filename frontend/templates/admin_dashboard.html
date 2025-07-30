@@ -1,0 +1,387 @@
+{{template "base" .}}
+{{define "admin-dashboard-content"}}
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-8">
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-shield-alt text-purple-600 mr-3"></i>
+                        Administrator Dashboard
+                    </h2>
+                    <p class="text-gray-600 mt-2">Systemübersicht und Verwaltungstools</p>
+                </div>
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>
+                    Zuletzt aktualisiert: <span id="lastUpdated"></span>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Total Assets -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100">
+                            <i class="fas fa-laptop text-2xl text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Assets gesamt</p>
+                            <p class="text-2xl font-bold text-gray-900">{{.TotalAssets}}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-green-600">
+                            <i class="fas fa-arrow-up mr-1"></i>
+                            {{.AvailableAssets}} verfügbar
+                        </span>
+                        <span class="text-orange-600 ml-4">
+                            <i class="fas fa-tools mr-1"></i>
+                            {{.MaintenanceAssets}} in Wartung
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Active Employees -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100">
+                            <i class="fas fa-user-check text-2xl text-green-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Aktive Mitarbeiter</p>
+                            <p class="text-2xl font-bold text-gray-900">{{.ActiveEmployees}}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-purple-600">
+                            <i class="fas fa-crown mr-1"></i>
+                            {{.AdminEmployees}} Admins
+                        </span>
+                        <span class="text-gray-600 ml-4">
+                            von {{.TotalEmployees}} gesamt
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Assigned Assets -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-purple-100">
+                            <i class="fas fa-handshake text-2xl text-purple-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Assets zugewiesen</p>
+                            <p class="text-2xl font-bold text-gray-900">{{.AssignedAssets}}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-blue-600">
+                            {{if .TotalAssets}}{{percentage .AssignedAssets .TotalAssets}}%{{else}}0%{{end}} Auslastung
+                        </span>
+                    </div>
+                </div>
+
+                <!-- System Health -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-emerald-100">
+                            <i class="fas fa-heartbeat text-2xl text-emerald-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">System Status</p>
+                            <p class="text-2xl font-bold text-emerald-600">Healthy</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-emerald-600">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Alle Services online
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Asset Management -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <i class="fas fa-laptop text-blue-600 mr-2"></i>
+                            Asset Management
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">Verwaltung und Übersicht aller Assets</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <a href="/assets/create" 
+                           class="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
+                            <i class="fas fa-plus"></i>
+                            <span>Neues Asset erstellen</span>
+                        </a>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="/assets" 
+                               class="bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 transition-colors text-center text-sm">
+                                <i class="fas fa-list mr-1"></i>Alle Assets
+                            </a>
+                            <button onclick="exportAssets()" 
+                                    class="bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 transition-colors text-sm">
+                                <i class="fas fa-download mr-1"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Management -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <i class="fas fa-users text-green-600 mr-2"></i>
+                            Benutzerverwaltung
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">Mitarbeiter und Berechtigungen verwalten</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <a href="/employees/create" 
+                           class="w-full bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Neuen Mitarbeiter erstellen</span>
+                        </a>
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="/employees" 
+                               class="bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 transition-colors text-center text-sm">
+                                <i class="fas fa-list mr-1"></i>Alle Mitarbeiter
+                            </a>
+                            <a href="/admin/users" 
+                               class="bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 transition-colors text-center text-sm">
+                                <i class="fas fa-cog mr-1"></i>Verwaltung
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity & System Info -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Recent Assets -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <i class="fas fa-clock text-orange-600 mr-2"></i>
+                            Neueste Assets
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        {{if .RecentAssets}}
+                            <div class="space-y-3">
+                                {{range .RecentAssets}}
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">{{.Name}}</p>
+                                        <p class="text-xs text-gray-500">{{.DeviceType}} • {{.SerialNumber}}</p>
+                                    </div>
+                                    <span class="text-xs px-2 py-1 rounded-full {{getStatusClass .Status}}">
+                                        {{getStatusText .Status}}
+                                    </span>
+                                </div>
+                                {{end}}
+                            </div>
+                        {{else}}
+                            <p class="text-gray-500 text-center py-8">Keine Assets gefunden</p>
+                        {{end}}
+                        <div class="mt-4 text-center">
+                            <a href="/assets" class="text-blue-600 hover:text-blue-800 text-sm">
+                                Alle Assets anzeigen →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Employees -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <i class="fas fa-user-plus text-purple-600 mr-2"></i>
+                            Neueste Mitarbeiter
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        {{if .RecentEmployees}}
+                            <div class="space-y-3">
+                                {{range .RecentEmployees}}
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <span class="text-xs font-medium text-blue-600">
+                                                {{slice .FirstName 0 1}}{{slice .LastName 0 1}}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900">{{.FirstName}} {{.LastName}}</p>
+                                            <p class="text-xs text-gray-500">{{.Email}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-1">
+                                        {{if .IsAdmin}}
+                                            <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">Admin</span>
+                                        {{end}}
+                                        {{if .IsActive}}
+                                            <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Aktiv</span>
+                                        {{else}}
+                                            <span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">Inaktiv</span>
+                                        {{end}}
+                                    </div>
+                                </div>
+                                {{end}}
+                            </div>
+                        {{else}}
+                            <p class="text-gray-500 text-center py-8">Keine Mitarbeiter gefunden</p>
+                        {{end}}
+                        <div class="mt-4 text-center">
+                            <a href="/employees" class="text-blue-600 hover:text-blue-800 text-sm">
+                                Alle Mitarbeiter anzeigen →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tools -->
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="fas fa-tools text-red-600 mr-2"></i>
+                        System-Tools
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">Erweiterte Administratorfunktionen</p>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onclick="checkSystemHealth()" 
+                                class="bg-blue-100 text-blue-700 px-4 py-3 rounded-md hover:bg-blue-200 transition-colors flex items-center space-x-2">
+                            <i class="fas fa-stethoscope"></i>
+                            <span>System Health Check</span>
+                        </button>
+                        <button onclick="exportData()" 
+                                class="bg-green-100 text-green-700 px-4 py-3 rounded-md hover:bg-green-200 transition-colors flex items-center space-x-2">
+                            <i class="fas fa-database"></i>
+                            <span>Daten exportieren</span>
+                        </button>
+                        <button onclick="clearCache()" 
+                                class="bg-orange-100 text-orange-700 px-4 py-3 rounded-md hover:bg-orange-200 transition-colors flex items-center space-x-2">
+                            <i class="fas fa-broom"></i>
+                            <span>Cache leeren</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+
+        // Update timestamp
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleString('de-DE');
+
+        // System Tools
+        async function checkSystemHealth() {
+            try {
+                const response = await fetch(API_BASE + '/health');
+                const data = await response.json();
+                alert('System Health: OK\n\nDetails:\n' + JSON.stringify(data, null, 2));
+            } catch (error) {
+                alert('System Health Check fehlgeschlagen: ' + error.message);
+            }
+        }
+
+        function exportAssets() {
+            window.open(API_BASE + '/assets/export', '_blank');
+        }
+
+        function exportData() {
+            if (confirm('Möchten Sie alle Daten exportieren?')) {
+                window.open(API_BASE + '/admin/export', '_blank');
+            }
+        }
+
+        async function clearCache() {
+            if (!confirm('Möchten Sie den Cache leeren?')) return;
+            
+            try {
+                const token = getAuthToken();
+                const response = await fetch(API_BASE + '/admin/cache/clear', {
+                    method: 'POST',
+                    headers: { 'Authorization': token }
+                });
+                
+                if (response.ok) {
+                    alert('Cache erfolgreich geleert');
+                } else {
+                    alert('Fehler beim Leeren des Cache');
+                }
+            } catch (error) {
+                alert('Cache-Fehler: ' + error.message);
+            }
+        }
+
+        // Auto-refresh data every 30 seconds
+        setInterval(() => {
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleString('de-DE');
+        }, 30000);
+
+        console.log('👑 Admin Dashboard loaded');
+        console.log('📍 API Base URL:', API_BASE);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserPermissions();
+        });
+
+        async function checkUserPermissions() {
+            try {
+                const token = getAuthToken();
+                if (!token) return;
+
+                const response = await fetch(`${API_BASE}/user/profile`, {
+                    headers: { 'Authorization': token }
+                });
+
+                if (response.ok) {
+                    const currentUser = await response.json();
+                    
+                    if (currentUser.is_admin) {
+                        // Show admin features
+                        document.getElementById('admin-link').style.display = 'block';
+                        // document.getElementById('create-employee-btn').style.display = 'inline-flex';
+                        
+                        // Show admin-only buttons
+                        document.querySelectorAll('.admin-only').forEach(btn => {
+                            btn.style.display = 'inline-block';
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking permissions:', error);
+            }
+        }
+
+        // Token helper function
+        function getAuthToken() {
+            const token = localStorage.getItem('auth_token');
+            if (token && token !== 'deleted') {
+                return 'Bearer ' + token;
+            }
+            
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'auth_token' && value && value !== 'deleted') {
+                    return 'Bearer ' + value;
+                }
+            }
+            
+            return null;
+        }
+
+    </script>
+{{end}}

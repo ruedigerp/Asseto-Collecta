@@ -1,0 +1,550 @@
+{{template "base" .}}
+{{define "employee-edit-content"}}
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex items-center space-x-4">
+                <a href="/employees" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </a>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-gray-900">Mitarbeiter bearbeiten</h2>
+                    <div class="flex items-center space-x-4 text-gray-600">
+                        <span>{{.Employee.FirstName}} {{.Employee.LastName}} (ID: {{.Employee.ID}})</span>
+                        {{if .Employee.IsAdmin}}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="fas fa-crown mr-1"></i>Administrator
+                            </span>
+                        {{end}}
+                        {{if not .Employee.IsActive}}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-ban mr-1"></i>Deaktiviert
+                            </span>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <script>
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                const success = urlParams.get('success');
+                
+                if (error) {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+                        errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>${error}`;
+                        document.getElementById('messages').appendChild(errorDiv);
+                    });
+                }
+                
+                if (success) {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
+                        successDiv.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${success}`;
+                        document.getElementById('messages').appendChild(successDiv);
+                    });
+                }
+            </script>
+            <div id="messages"></div>
+
+            <!-- Edit Form -->
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-medium text-gray-900">Mitarbeiter Informationen</h3>
+                    <p class="text-sm text-gray-500">Alle Felder mit * sind Pflichtfelder</p>
+                </div>
+                <form method="POST" action="/employees/{{.Employee.ID}}/edit" class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- First Name -->
+                        <div>
+                            <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Vorname *
+                            </label>
+                            <input type="text" name="first_name" id="first_name" required
+                                   value="{{.Employee.FirstName}}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Last Name -->
+                        <div>
+                            <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nachname *
+                            </label>
+                            <input type="text" name="last_name" id="last_name" required
+                                   value="{{.Employee.LastName}}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                E-Mail-Adresse *
+                            </label>
+                            <input type="email" name="email" id="email" required
+                                   value="{{.Employee.Email}}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Department -->
+                        <div>
+                            <label for="department" class="block text-sm font-medium text-gray-700 mb-2">
+                                Abteilung
+                            </label>
+                            <select name="department" id="department" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Abteilung auswählen</option>
+                                <option value="IT" {{if eq .Employee.Department "IT"}}selected{{end}}>IT</option>
+                                <option value="HR" {{if eq .Employee.Department "HR"}}selected{{end}}>HR / Personal</option>
+                                <option value="Finance" {{if eq .Employee.Department "Finance"}}selected{{end}}>Finanzen</option>
+                                <option value="Marketing" {{if eq .Employee.Department "Marketing"}}selected{{end}}>Marketing</option>
+                                <option value="Sales" {{if eq .Employee.Department "Sales"}}selected{{end}}>Vertrieb</option>
+                                <option value="Operations" {{if eq .Employee.Department "Operations"}}selected{{end}}>Operations</option>
+                                <option value="Management" {{if eq .Employee.Department "Management"}}selected{{end}}>Management</option>
+                                <option value="Support" {{if eq .Employee.Department "Support"}}selected{{end}}>Support</option>
+                                <option value="Development" {{if eq .Employee.Department "Development"}}selected{{end}}>Entwicklung</option>
+                                <option value="Design" {{if eq .Employee.Department "Design"}}selected{{end}}>Design</option>
+                                <option value="Legal" {{if eq .Employee.Department "Legal"}}selected{{end}}>Recht</option>
+                                <option value="Other" {{if eq .Employee.Department "Other"}}selected{{end}}>Andere</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Admin Settings (nur für Admins sichtbar) -->
+                    <div id="admin-settings" class="bg-yellow-50 rounded-lg p-4 border border-yellow-200" style="display: none;">
+                        <h4 class="text-sm font-medium text-gray-900 mb-4 flex items-center">
+                            <i class="fas fa-crown text-yellow-600 mr-2"></i>
+                            Administrator-Einstellungen
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Is Admin -->
+                            <div class="flex items-center">
+                                <input type="checkbox" name="is_admin" id="is_admin" 
+                                       {{if .Employee.IsAdmin}}checked{{end}}
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="is_admin" class="ml-2 block text-sm text-gray-700">
+                                    Administrator-Berechtigung
+                                </label>
+                            </div>
+
+                            <!-- Is Active -->
+                            <div class="flex items-center">
+                                <input type="checkbox" name="is_active" id="is_active" 
+                                       {{if .Employee.IsActive}}checked{{end}}
+                                       class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                                <label for="is_active" class="ml-2 block text-sm text-gray-700">
+                                    Account aktiv
+                                </label>
+                            </div>
+                        </div>
+                        <p class="text-xs text-yellow-700 mt-2">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Änderungen an Admin-Berechtigungen erfordern besondere Vorsicht.
+                        </p>
+                    </div>
+
+                    <!-- Employee Info -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Zusätzliche Informationen</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                                <span class="font-medium">Erstellt am:</span>
+                                {{formatDateTime .Employee.CreatedAt}}
+                            </div>
+                            <div>
+                                <span class="font-medium">Zuletzt geändert:</span>
+                                {{formatDateTime .Employee.UpdatedAt}}
+                            </div>
+                            {{if .Employee.LastLogin}}
+                            <div>
+                                <span class="font-medium">Letzter Login:</span>
+                                {{formatDateTime .Employee.LastLogin}}
+                            </div>
+                            {{else}}
+                            <div>
+                                <span class="font-medium">Letzter Login:</span>
+                                <span class="text-red-600">Noch nie eingeloggt</span>
+                            </div>
+                            {{end}}
+                            <div>
+                                <span class="font-medium">Status:</span>
+                                {{if .Employee.IsActive}}
+                                    <span class="text-green-600">Aktiv</span>
+                                {{else}}
+                                    <span class="text-red-600">Deaktiviert</span>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-between pt-6 border-t">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Änderungen werden sofort gespeichert
+                        </div>
+                        <div class="space-x-3">
+                            <a href="/employees" 
+                               class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                                Abbrechen
+                            </a>
+                            <button type="submit" 
+                                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-save mr-2"></i>Änderungen speichern
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Admin Actions Card -->
+            <div id="admin-actions" class="bg-white rounded-lg shadow-sm border" style="display: none;">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="fas fa-tools text-orange-600 mr-2"></i>
+                        Administrator-Aktionen
+                    </h3>
+                    <p class="text-sm text-gray-500">Spezielle Verwaltungsoptionen für Administratoren</p>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Passwort setzen -->
+                        <a href="/employees/{{.Employee.ID}}/password" 
+                           class="bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2 text-center justify-center">
+                            <i class="fas fa-key"></i>
+                            <span>Passwort setzen</span>
+                        </a>
+
+                        <!-- Password Reset -->
+                        <button onclick="resetPassword()" 
+                                class="bg-orange-600 text-white px-4 py-3 rounded-md hover:bg-orange-700 transition-colors flex items-center space-x-2 justify-center">
+                            <i class="fas fa-undo"></i>
+                            <span>Passwort zurücksetzen</span>
+                        </button>
+
+                        <!-- Login als User (nur für Development) -->
+                        <button onclick="loginAsUser()" 
+                                class="bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 transition-colors flex items-center space-x-2 justify-center" 
+                                style="display: none;" id="impersonate-btn">
+                            <i class="fas fa-user-secret"></i>
+                            <span>Als User anmelden</span>
+                        </button>
+                    </div>
+
+                    <div class="mt-4 text-xs text-gray-500">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Diese Aktionen sind nur für Administratoren verfügbar und werden protokolliert.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standard Actions Card -->
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-medium text-gray-900">Weitere Aktionen</h3>
+                </div>
+                <div class="p-6">
+                    <div class="flex flex-wrap gap-3">
+                        <a href="/employees" 
+                           class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2">
+                            <i class="fas fa-list"></i>
+                            <span>Alle Mitarbeiter</span>
+                        </a>
+
+                        <a href="/employees/create" 
+                           class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2" 
+                           id="create-employee-btn" style="display: none;">
+                            <i class="fas fa-plus"></i>
+                            <span>Neuen Mitarbeiter erstellen</span>
+                        </a>
+
+                        <button onclick="confirmDelete()" 
+                                class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2"
+                                id="delete-employee-btn" style="display: none;">
+                            <i class="fas fa-trash"></i>
+                            <span>Mitarbeiter löschen</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-3"></i>
+                <h3 class="text-lg font-medium text-gray-900">Mitarbeiter löschen</h3>
+            </div>
+            <p class="text-gray-600 mb-6">
+                Sind Sie sicher, dass Sie <strong>{{.Employee.FirstName}} {{.Employee.LastName}}</strong> löschen möchten? 
+                Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+            <div class="flex space-x-3">
+                <button onclick="hideDeleteModal()" 
+                        class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                    Abbrechen
+                </button>
+                <form method="POST" action="/employees/{{.Employee.ID}}/delete" class="flex-1">
+                    <button type="submit" 
+                            class="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                        Löschen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div id="resetPasswordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-key text-orange-600 text-2xl mr-3"></i>
+                <h3 class="text-lg font-medium text-gray-900">Passwort zurücksetzen</h3>
+            </div>
+            <p class="text-gray-600 mb-6">
+                Möchten Sie ein neues temporäres Passwort für <strong>{{.Employee.FirstName}} {{.Employee.LastName}}</strong> generieren?
+                Der Benutzer muss das Passwort beim nächsten Login ändern.
+            </p>
+            <div class="flex space-x-3">
+                <button onclick="hideResetPasswordModal()" 
+                        class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                    Abbrechen
+                </button>
+                <button onclick="executePasswordReset()" 
+                        class="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors">
+                    Zurücksetzen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '{{.APIBaseURL}}';
+        console.log('✏️ Edit Employee page loaded');
+        console.log('📍 API Base URL:', API_BASE);
+        console.log('👤 Employee ID:', {{.Employee.ID}});
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const firstName = document.getElementById('first_name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!firstName || !lastName || !email) {
+                e.preventDefault();
+                alert('Bitte füllen Sie alle Pflichtfelder aus.');
+                return false;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+                return false;
+            }
+
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Wird gespeichert...';
+        });
+
+        // Delete modal functions
+        function confirmDelete() {
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function hideDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        // Password reset modal functions
+        function resetPassword() {
+            document.getElementById('resetPasswordModal').classList.remove('hidden');
+        }
+
+        function hideResetPasswordModal() {
+            document.getElementById('resetPasswordModal').classList.add('hidden');
+        }
+
+        async function executePasswordReset() {
+            try {
+                const token = getAuthToken();
+                if (!token) {
+                    alert('Nicht authentifiziert');
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/employees/{{.Employee.ID}}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`Neues temporäres Passwort: ${result.temporary_password}\n\nBitte notieren Sie sich das Passwort und geben Sie es sicher an den Benutzer weiter.`);
+                    hideResetPasswordModal();
+                } else {
+                    const error = await response.json();
+                    alert('Fehler beim Zurücksetzen des Passworts: ' + (error.error || 'Unbekannter Fehler'));
+                }
+            } catch (error) {
+                console.error('Password reset error:', error);
+                alert('Fehler beim Zurücksetzen des Passworts: ' + error.message);
+            }
+        }
+
+        // Login as user function (für Development/Testing)
+        async function loginAsUser() {
+            if (!confirm('Möchten Sie sich als dieser Benutzer anmelden? Dies ist nur für Entwicklungs-/Testzwecke gedacht.')) {
+                return;
+            }
+
+            try {
+                const token = getAuthToken();
+                const response = await fetch(`${API_BASE}/admin/impersonate/{{.Employee.ID}}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Set new token and redirect
+                    localStorage.setItem('auth_token', result.token);
+                    document.cookie = `auth_token=${result.token}; path=/`;
+                    window.location.href = '/';
+                } else {
+                    alert('Fehler beim Anmelden als Benutzer');
+                }
+            } catch (error) {
+                console.error('Impersonate error:', error);
+                alert('Fehler beim Anmelden als Benutzer: ' + error.message);
+            }
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) hideDeleteModal();
+        });
+
+        document.getElementById('resetPasswordModal').addEventListener('click', function(e) {
+            if (e.target === this) hideResetPasswordModal();
+        });
+
+        // ESC key to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideDeleteModal();
+                hideResetPasswordModal();
+            }
+        });
+
+        // Check if current user is admin and show/hide admin features
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserPermissions();
+        });
+
+        async function checkUserPermissions() {
+            try {
+                const token = getAuthToken();
+                if (!token) return;
+
+                const response = await fetch(`${API_BASE}/user/profile`, {
+                    headers: { 'Authorization': token }
+                });
+
+                if (response.ok) {
+                    const currentUser = await response.json();
+                    
+                    if (currentUser.is_admin) {
+                        // Show admin features
+                        document.getElementById('admin-settings').style.display = 'block';
+                        document.getElementById('admin-actions').style.display = 'block';
+                        document.getElementById('admin-link').style.display = 'block';
+                        document.getElementById('create-employee-btn').style.display = 'inline-flex';
+                        document.getElementById('delete-employee-btn').style.display = 'inline-flex';
+                        
+                        // Show impersonate button only in development
+                        if (window.location.hostname === 'localhost' || window.location.hostname.includes('dev')) {
+                            document.getElementById('impersonate-btn').style.display = 'flex';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking permissions:', error);
+            }
+        }
+    </script>
+
+    <!-- Auth Token Script -->
+    <script>
+        const API_BASE_URL = '{{.APIBaseURL}}';
+        
+        // Token-Hilfsfunktionen
+        function getAuthToken() {
+            // 1. Versuche localStorage
+            const token = localStorage.getItem('auth_token');
+            if (token && token !== 'deleted') {
+                return 'Bearer ' + token;
+            }
+            
+            // 2. Versuche Cookie
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'auth_token' && value && value !== 'deleted') {
+                    return 'Bearer ' + value;
+                }
+            }
+            
+            return null;
+        }
+        
+        // Token validation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = getAuthToken();
+            
+            if (!token) {
+                console.log('❌ No auth token found');
+                return;
+            }
+            
+            // Validate token
+            fetch(API_BASE_URL + '/user/profile', {
+                headers: { 'Authorization': token }
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Token is valid');
+                    return response.json();
+                } else if (response.status === 401) {
+                    console.log('❌ Token expired, redirecting to login');
+                    localStorage.removeItem('auth_token');
+                    document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    window.location.href = '/login?error=' + encodeURIComponent('Sitzung abgelaufen');
+                }
+            })
+            .then(userData => {
+                if (userData) {
+                    console.log('👤 Current user:', userData.first_name, userData.last_name);
+                    localStorage.setItem('user_data', JSON.stringify(userData));
+                }
+            })
+            .catch(error => {
+                console.error('❌ Token validation error:', error);
+            });
+        });
+    </script>
+{{end}}
