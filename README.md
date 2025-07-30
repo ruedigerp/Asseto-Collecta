@@ -113,7 +113,7 @@ Asseto Collecta follows a modern microservices architecture with clear separatio
 - **JavaScript**: Vanilla JS with modern features
 
 **Infrastructure:**
-- **Containerization**: Docker & Podman
+- **Containerization**: Docker & Podman & Kubernetes
 - **Multi-Architecture**: ARM64 & AMD64 support
 - **Reverse Proxy**: Compatible with Nginx, Traefik
 - **Monitoring**: Health check endpoints
@@ -129,7 +129,7 @@ Asseto Collecta follows a modern microservices architecture with clear separatio
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/asseto-collecta.git
+git clone https://github.com/ruedigerp/Asseto-Collecta.git
 cd asseto-collecta
 ```
 
@@ -617,7 +617,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ./api
       args:
         VERSION: v1.0.0
         STAGE: production
@@ -666,17 +666,7 @@ volumes:
   mysql_data:
 ```
 
-### Building and Running
-
 ```bash
-# Build multi-architecture images
-V=24
-podman build --no-cache --platform linux/arm64,linux/amd64 \
-  --manifest "ghcr.io/yourusername/asseto-collecta:v0.0.${V}" \
-  --build-arg VERSION=v0.0.${V} \
-  --build-arg STAGE=prod \
-  -f ./Dockerfile .
-
 # Run with Docker Compose
 docker-compose up -d
 
@@ -684,41 +674,98 @@ docker-compose up -d
 docker-compose ps
 ```
 
+### Building and Running
+
+#### API
+
+```bash
+# Build multi-architecture images
+cd api
+V=24
+podman build --no-cache --platform linux/arm64,linux/amd64 \
+  --manifest "ghcr.io/ruedigerp/asseto-collecta-api:v0.0.${V}" \
+  --build-arg VERSION=v0.0.${V} \
+  --build-arg STAGE=prod \
+  -f ./Dockerfile .
+```
+
+#### Frontend
+
+```bash
+# Build multi-architecture images
+cd api
+V=24
+podman build --no-cache --platform linux/arm64,linux/amd64 \
+  --manifest "ghcr.io/ruedigerp/asseto-collecta-api:v0.0.${V}" \
+  --build-arg VERSION=v0.0.${V} \
+  --build-arg STAGE=prod \
+  -f ./Dockerfile .
+```
+
 ## 🛠 Development
 
 ### Project Structure
 ```
 asseto-collecta/
-├── backend/
-│   ├── main.go              # Backend entry point
-│   ├── models.go            # Data models
-│   ├── handlers.go          # API handlers
-│   ├── auth.go              # Authentication logic
-│   └── database.go          # Database configuration
-├── frontend/
-│   ├── main.go              # Frontend entry point
-│   ├── handlers.go          # Route handlers
-│   ├── auth.go              # Frontend auth logic
-│   └── templates/           # HTML templates
-│       ├── base.html        # Base template
-│       ├── assets.html      # Asset views
-│       └── employees.html   # Employee views
-├── static/                  # Static assets
-│   ├── css/                 # Stylesheets
-│   ├── js/                  # JavaScript files
-│   └── images/              # Images
-├── docker-compose.yml       # Development environment
-├── Dockerfile              # Production container
-├── go.mod                  # Go module definition
-└── README.md               # This file
+├── api
+│   ├── Dockerfile
+│   ├── go.mod
+│   └── main.go
+├── assets
+│   ├── Admin_Dashboard.png
+│   ├── asset_edit.png
+│   ├── asset_history.png
+│   ├── asset_management.png
+│   ├── Asseto_Collecta_Assets.png
+│   ├── Asseto_Collecta_Dashboard.png
+│   ├── Asseto_Collecta_Employees.png
+│   ├── create_asset.png
+│   └── emploee_edit.png
+├── frontend
+│   ├── admin.go
+│   ├── assets.go
+│   ├── Dockerfile
+│   ├── employee.go
+│   ├── go.mod
+│   ├── login.go
+│   ├── main.go
+│   ├── models.go
+│   ├── password.go
+│   ├── static
+│   │   └── css
+│   │       └── style.css
+│   ├── templates
+│   │   ├── admin_dashboard.html
+│   │   ├── asset_history.html
+│   │   ├── assets.html
+│   │   ├── base_footer.html
+│   │   ├── base_header.html
+│   │   ├── base_meta.html
+│   │   ├── base_nav.html
+│   │   ├── base.html
+│   │   ├── create_asset.html
+│   │   ├── create_employee.html
+│   │   ├── edit_asset.html
+│   │   ├── edit_employee.html
+│   │   ├── employees.html
+│   │   ├── error.html
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── manage_asset.html
+│   │   ├── set_password.html
+│   │   └── test.html
+│   ├── templates.go
+│   └── version.go
+├── k8s-asset-mngt.yaml
+└── README.md
 ```
 
 ### Development Setup
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/asseto-collecta.git
-cd asseto-collecta
+git clone https://github.com/ruedigerp/Asseto-Collecta.git
+cd Asseto-Collecta
 
 # Install dependencies
 go mod tidy
@@ -864,9 +911,9 @@ SOFTWARE.
 ## 🙋‍♂️ Support & Contact
 
 - **Documentation**: Check this README and inline code comments
-- **Issues**: Report bugs via [GitHub Issues](https://github.com/yourusername/asseto-collecta/issues)
-- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/yourusername/asseto-collecta/discussions)
-- **Email**: For security issues, email [security@asseto-collecta.com](mailto:security@asseto-collecta.com)
+- **Issues**: Report bugs via [GitHub Issues](https://github.com/ruedigerp/Asseto-Collecta/issues)
+- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/ruedigerp/Asseto-Collecta/discussions)
+- **Email**: For security issues, email [security@asseto-collecta.com](mailto:security@tytik.cloud)
 
 ---
 
