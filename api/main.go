@@ -119,11 +119,11 @@ var db *gorm.DB
 var rdb *redis.Client
 
 // Config
-type Config struct {
-	DatabaseURL string
-	RedisURL    string
-	UseRedis    bool
-}
+// type Config struct {
+// 	DatabaseURL string
+// 	RedisURL    string
+// 	UseRedis    bool
+// }
 
 // Generate JWT Token
 func generateJWT(employee Employee) (string, time.Time, error) {
@@ -1403,7 +1403,7 @@ func getCacheStats(c *gin.Context) {
 }
 
 // Setup routes
-func setupRoutes() *gin.Engine {
+func setupRoutes(config Config) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(corsMiddleware())
@@ -1416,7 +1416,7 @@ func setupRoutes() *gin.Engine {
 				"status":    "healthy",
 				"service":   "asset-management-api",
 				"timestamp": time.Now(),
-				"version":   "1.0.0",
+				"version":   config.VERSION,
 				"database":  getDatabaseStatus(),
 				"redis":     getRedisStatus(),
 			})
@@ -1425,7 +1425,7 @@ func setupRoutes() *gin.Engine {
 		public.GET("/", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"message": "Asset Management API",
-				"version": "1.0.0",
+				"version": config.VERSION,
 				"auth":    "required",
 				"endpoints": []string{
 					"POST /auth/login",
@@ -1504,19 +1504,48 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-func main() {
-	// Configuration
-	// config := Config{
-	// 	DatabaseURL: "user:password@tcp(localhost:3306)/asset_db?charset=utf8mb4&parseTime=True&loc=Local",
-	// 	RedisURL:    "localhost:6379",
-	// 	UseRedis:    true, // Set to false if you don't want to use Redis
-	// }
-	config := Config{
-		// DatabaseURL: "asset_user:asset_password@tcp(localhost:3306)/asset_db?charset=utf8mb4&parseTime=True&loc=Local",
-		DatabaseURL: "asset_user:asset_password@tcp(mariadb:3306)/asset_db?charset=utf8mb4&parseTime=True&loc=Local",
-		RedisURL:    "localhost:6379",
-		UseRedis:    true, // false wenn nur MariaDB
+type Config struct {
+	RedisURL    string
+	UseRedis    bool
+	REDIS_HOST  string
+	REDIS_PORT  string
+	DB_HOST     string
+	DB_PORT     string
+	DB_USER     string
+	DB_PASS     string
+	DB_NAME     string
+	DatabaseURL string
+	VERSION     string
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	val := getEnv(key, fmt.Sprintf("%t", defaultValue))
+	result, err := strconv.ParseBool(val)
+	if err != nil {
+		return defaultValue
 	}
+	return result
+}
+
+func loadConfig() Config {
+	return Config{
+		RedisURL:   getEnv("REDISURL", "localhost:6379"),
+		UseRedis:   getEnvBool("UseRedis", true),
+		REDIS_PORT: getEnv("REDIS_PORT", "6379"),
+		REDIS_HOST: getEnv("REDIS_HOST", "localhost"),
+		DB_HOST:    getEnv("DB_HOST", "localhost"),
+		DB_PORT:    getEnv("DB_PORT", "3306"),
+		DB_USER:    getEnv("DB_USER", "asset_user"),
+		DB_PASS:    getEnv("DB_PASS", "asset_password"),
+		DB_NAME:    getEnv("DB_NAME", "asset_db"),
+		VERSION:    getEnv("VERSION", "v0.0.1"),
+	}
+}
+
+func main() {
+	config := loadConfig()
+	config.DatabaseURL = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", config.DB_USER, config.DB_PASS, config.DB_HOST, config.DB_PORT, config.DB_NAME)
+	config.RedisURL = fmt.Sprintf("%s:%s", config.REDIS_HOST, config.REDIS_PORT)
 
 	// Initialize database
 	if err := initDB(config); err != nil {
@@ -1524,7 +1553,7 @@ func main() {
 	}
 
 	// Setup routes
-	r := setupRoutes()
+	r := setupRoutes(config)
 
 	// Start server
 	log.Println("Starting server on :8090")
