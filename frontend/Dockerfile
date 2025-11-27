@@ -1,6 +1,6 @@
 # Multi-Arch Dockerfile für Podman
 ARG BUILDPLATFORM
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
 
 # Build-Argumente für Cross-Compilation  
 ARG TARGETPLATFORM
