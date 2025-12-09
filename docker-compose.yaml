@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:11.0
+    container_name: mariadb-asset
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: asset_db
+      MARIADB_USER: asset_user
+      MARIADB_PASSWORD: asset_password
+      MARIADB_CHARACTER_SET_SERVER: utf8mb4
+      MARIADB_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:Z
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # asset-api:
+  #   image: ghcr.io/ruedigerp/asset-mngt-api:v0.0.1
+  #   container_name: assetapi
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8090:8090"
+
+  # asset-fe:
+  #   image: ghcr.io/ruedigerp/asset-mngt-frontend:v0.0.1
+  #   container_name: assetfe
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8090:8090"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-asset
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # Optional: phpMyAdmin für Datenbank-Management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin-asset
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: asset_user
+      PMA_PASSWORD: asset_password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    depends_on:
+      - mariadb
+
+volumes:
+  mariadb_data:
+  redis_data:

@@ -156,10 +156,29 @@ spec:
         app: asset-api
     spec:
       containers:
-      - image: ghcr.io/ruedigerp/asset-mngt-api:v0.0.7
+      - image: ghcr.io/ruedigerp/asset-mngt-api:v0.0.11
         name: asset-api
+        envFrom:
+        - configMapRef:
+            name: asset-mngt-api-config
         ports:
         - containerPort: 8090
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asset-mngt-api-config
+  namespace: asset-mngt
+data:
+  API_URL: "https://assets-api.dev.kuepper.nrw"
+  REDIS_HOST:   "redis"
+  UseRedis:   "true"
+  REDIS_PORT: "6379"
+  DB_HOST:    "mariadb"
+  DB_PORT:    "3306"
+  DB_USER:    "asset_user"
+  DB_PASS:    "asset_password"
+  DB_NAME:    "asset_db"
 ---
 apiVersion: v1
 kind: Service

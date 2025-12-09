@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
 	"gorm.io/driver/mysql"
@@ -425,6 +425,14 @@ func createEmployeeWithAuth(c *gin.Context) {
 	// Include temporary password in response for admins
 	if employee.IsAdmin {
 		response["temporary_password"] = generateRandomPassword()
+	}
+	key := "employees:all"
+	// Invalidate cache
+	ctx := context.Background()
+	if err := rdb.Del(ctx, key).Err(); err != nil {
+		log.Printf("⚠️ Failed to invalidate cache for key %s: %v", key, err)
+	} else {
+		log.Printf("✅ Cache invalidated for key: %s", key)
 	}
 
 	c.JSON(http.StatusCreated, response)

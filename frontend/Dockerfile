@@ -16,7 +16,8 @@ WORKDIR /app
 
 # Dependencies kopieren und downloaden
 COPY go.mod go.sum ./
-RUN go mod tidy
+RUN go mod download
+# RUN go mod tidy
 
 # Source code kopieren
 COPY . .

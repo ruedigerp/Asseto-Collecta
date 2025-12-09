@@ -8,11 +8,14 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG VERSION
 
+ENV VERSION=${VERSION}
+
 WORKDIR /app
 
 # Dependencies kopieren und downloaden
 COPY go.mod go.sum ./
-RUN go mod tidy
+RUN go mod download
+# RUN go mod tidy
 
 # Source code kopieren
 COPY . .
@@ -25,6 +28,10 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
 
 # Runtime Stage
 FROM alpine:latest
+
+ARG VERSION
+
+ENV VERSION=${VERSION}
 
 # Security: Non-root User erstellen
 RUN addgroup -g 1001 -S appgroup && \
