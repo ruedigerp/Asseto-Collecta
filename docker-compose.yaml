@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mariadb:
-    image: mariadb:11.0
+    image: mariadb:12.1
     container_name: mariadb-asset
     restart: unless-stopped
     ports:
@@ -39,7 +39,7 @@ services:
   #     - "8090:8090"
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: redis-asset
     restart: unless-stopped
     ports:
